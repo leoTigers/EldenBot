@@ -1,0 +1,52 @@
+#!/usr/bin/python3
+import sys
+import os
+import discord
+import asyncio
+import logging
+import json
+import gspread
+import traceback
+
+from function import *
+from roll import roll,bloodlust_roll
+from random_message import *
+from latex import latex
+
+logging.basicConfig(level=logging.INFO)
+client = discord.Client()
+#wb = gspread.authorize("token_google").open_by_key('1v-MzfsOmmCQNwWFHl86UVrf3lIm5QPitRiJeA4ISIPw')
+#wb = wb.get_worksheet(0)
+
+@client.event
+async def on_ready():
+    print("Connected")
+
+@client.event
+async def on_message(m):
+    if m.content.startswith('/') :#and m.author == client.user:
+        member = m.author
+        cmd = m.content.split(" ")[0][1:].lower()
+        force = True if cmd == "force" and user_is_mod(member) else False
+        if force:
+            cmd = m.content.split(" ")[1]
+            args = m.content.split(" ")[2:]
+        else: args = m.content.split(" ")[1:]
+        try:
+            await command(m, member, cmd, args, force)
+        except Exception:
+            em = discord.Embed(title="Oh no !  😱",
+                               description="Une erreur s'est produite lors de l'éxécution de la commande\n" + msg("- [FATAL ERROR]\n" + traceback.format_exc()),
+                               colour=0xFF0000).set_footer(text="command : " + m.content,icon_url=m.author.avatar_url)
+            await m.channel.send(embed=em)
+    if m.author != client.user:
+        await random_message(client, m)
+            
+async def command(m, member, cmd, args, force):
+    if cmd == "r" or cmd == "roll" : await roll(m, args)
+    elif cmd == "rb" or cmd == "br": await bloodlust_roll(m, args)
+    elif cmd == "latex" : await latex(m, args)
+        
+fd = open("token")
+client.run(json.load(fd))
+fd.close()
