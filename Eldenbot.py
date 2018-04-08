@@ -7,11 +7,13 @@ import logging
 import json
 import gspread
 import traceback
+import shlex
 
 from function import *
 from roll import roll,bloodlust_roll
 from random_message import *
 from latex import latex
+import random_message
 
 logging.basicConfig(level=logging.INFO)
 client = discord.Client()
@@ -46,7 +48,15 @@ async def command(m, member, cmd, args, force):
     if cmd == "r" or cmd == "roll" : await roll(m, args)
     elif cmd == "rb" or cmd == "br": await bloodlust_roll(m, args)
     elif cmd == "latex" : await latex(m, args)
-        
+    elif cmd == "bash" : await bash(m, member, args)
+
+async def bash(m, member, args):
+    if member.id != 384274248799223818:
+        await(random.message.forbidden(m))
+    else:
+        rt = subrocces.run(shlex.split(args),timeout=10, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+        await m.channel.send(rt.stdout.decode("utf-8"))
+    
 fd = open("token")
 client.run(json.load(fd))
 fd.close()
