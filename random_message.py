@@ -21,12 +21,15 @@ ONLY_OWNER = [
     "mon protocole de sécurité me dis que ça a 99% de mal se finir, donc je préfère ne pas tenter, désolé."]
 
 async def random_message(client, message):
-    if "boop" in message.content.lower():
-        await message.channel.send(message.author.mention + " " + random.choice(BOOP))
-    if message.content.lower() in BONJOUR:
-        await message.channel.send(message.author.mention + " " + random.choice(BONJOUR))
     if client.user in message.mentions:
-        await message.channel.send(random.choice(RANDOM_REPLY))
+        if "boop" in message.content.lower():
+            await message.channel.send(message.author.mention + " " + random.choice(BOOP))
+        for msg in BONJOUR:
+            if msg in message.content.lower():
+                await message.channel.send(message.author.mention + " " + random.choice(BONJOUR))
+                return()
+        else:
+            await message.channel.send(random.choice(RANDOM_REPLY))
 
 async def forbidden(message, who="only_owner"):
     if who == "only_owner":
