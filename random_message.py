@@ -24,12 +24,14 @@ async def random_message(client, message):
     if client.user in message.mentions:
         if "boop" in message.content.lower():
             await message.channel.send(message.author.mention + " " + random.choice(BOOP))
+            return()
         for msg in BONJOUR:
             if msg in message.content.lower():
                 await message.channel.send(message.author.mention + " " + random.choice(BONJOUR))
                 return()
-        else:
-            await message.channel.send(random.choice(RANDOM_REPLY))
+
+        #else
+        await message.channel.send(random.choice(RANDOM_REPLY))
 
 async def forbidden(message, who="only_owner"):
     if who == "only_owner":
