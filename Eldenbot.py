@@ -24,6 +24,7 @@ client = discord.Client()
 async def on_ready():
     print("Connected")
 
+
 @client.event
 async def on_message(m):
     if m.content.startswith('/') :#and m.author == client.user:
@@ -43,12 +44,14 @@ async def on_message(m):
             await m.channel.send(embed=em)
     if m.author != client.user:
         await random_message(client, m)
-            
+
+
 async def command(m, member, cmd, args, force):
     if cmd == "r" or cmd == "roll" : await roll(m, args)
     elif cmd == "rb" or cmd == "br": await bloodlust_roll(m, args)
     elif cmd == "latex" : await latex(m, args)
     elif cmd == "bash" : await bash(m, member, args)
+
 
 async def bash(m, member, args):
     if member.id != 384274248799223818:
@@ -56,7 +59,8 @@ async def bash(m, member, args):
     else:
         rt = subprocess.run(shlex.split(" ".join(args)),timeout=10, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
         await m.channel.send(msg(rt.stdout.decode("utf-8")))
-    
+
+
 fd = open("token")
 client.run(json.load(fd))
 fd.close()
