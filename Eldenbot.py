@@ -14,6 +14,7 @@ from function import *
 from roll import roll,bloodlust_roll
 from random_message import *
 from latex import latex
+from money import balance
 
 logging.basicConfig(level=logging.INFO)
 client = discord.Client()
@@ -49,7 +50,8 @@ async def command(m, member, cmd, args, force):
     elif cmd == "rb" or cmd == "br": await bloodlust_roll(m, args)
     elif cmd == "latex" : await latex(m, args)
     elif cmd == "bash" : await bash(m, member, args)
-
+    elif cmd == "money" : await balance(m ,args, member)
+    
 async def bash(m, member, args):
     if member.id != 384274248799223818:
         await(forbidden(m))

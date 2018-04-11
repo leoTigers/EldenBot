@@ -1,5 +1,5 @@
 import discord
-1;4803;0cimport random
+import random
 
 BOOP = ["bip boop boop ?", "bip boop !", "boop bip ?", "boop boop !"]
 BONJOUR = ["salutation", "bonjour", "coucou", "salut", "yop", "hello", "yo"]
