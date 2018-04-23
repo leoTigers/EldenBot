@@ -24,7 +24,7 @@ ONLY_OWNER = [
 NOT_FOUND = [
     "J'ai pas trouvé chef !",
     "Ce que tu m'as demandé de chercher est encore mieux caché que Charlie.",
-    "Alors je cherche et je trouverais, cette chose qui me manque temps, qui me manque temps !"
+    "Alors je cherche et je trouverais, cette chose qui me manque tant, qui me manque tant !"
     "404 ! 404 ! 404 ! 404 ! ARRRRRGGGG !"
 ]
 
