@@ -1,3 +1,4 @@
+#/bin/python3
 from threading import Thread
 import asyncio, aiohttp, json
 

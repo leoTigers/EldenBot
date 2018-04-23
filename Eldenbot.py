@@ -5,7 +5,6 @@ import discord
 import asyncio
 import logging
 import json
-import gspread
 import traceback
 import shlex
 import subprocess
