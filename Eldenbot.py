@@ -53,7 +53,7 @@ async def command(m, member, cmd, args, force):
     elif cmd == "latex" : await latex(m, args)
     elif cmd == "bash" : await bash(m, member, args)
     elif cmd == "money" : await balance(m ,args, member)
-    elif cmd == "kikimeter" : await kikimeter(m, args)
+    elif cmd == "kikimeter" : await kikimeter(m, args, member)
 
 async def bash(m, member, args):
     if member.id != 384274248799223818:
