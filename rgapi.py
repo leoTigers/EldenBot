@@ -36,6 +36,17 @@ async def getSoloQSeasonMatches(accountId):
     tasks =  [panth.getMatch(match["gameId"]) for match in matchlist]
     return await asyncio.gather(*tasks)
 
+async def getSeasonMatches(accountId, timeline=False):
+    matches =  await panth.getMatchlist(accountId, params={"season":11})
+    matchlist = matches['matches']
+    tasks = [panth.getMatch(match["gameId"]) for match in matchlist]
+    if timeline:
+        timelines = [panth.getTimeline(match["gameId"]) for match in matchlist]
+        allMatches  = await asyncio.gather(*tasks)
+        allTimeline = await asyncio.gather(*timelines)
+        return (allMatches, allTimeline)
+    return await asyncio.gather(*tasks)
+
 async def get_bonus(summonerId, win, totalMatches):
     bonus = {}
     winrate = round((win / totalMatches) * 100)
@@ -98,3 +109,42 @@ async def kikimeter(m, args, member):
     em.set_footer(text="INFO : " + str(len(seasonMatches)) + " matchs analysés")
     em.set_author(name=summonerName, icon_url="http://ddragon.canisback.com/latest/img/profileicon/"+str(iconId)+".png")
     await msg.edit(content=".",embed=em)
+
+async def afkmeter(m, args, member):
+    count = {}
+    if not args: summonerName = member.name
+    else : summonerName = "".join(args)
+    accountId, summonerId, iconId = await getSummoner(summonerName)
+    if not accountId :
+        await m.channel.send("Invocateur non trouvé : {}".format(summonerName))
+        return None
+    try : colour = m.guild.get_member_named(summonerName).colour
+    except : colour = 0xC0C0C0
+    icon = "http://ddragon.canisback.com/latest/img/profileicon/"+str(iconId)+".png"
+    msg = await m.channel.send(embed=discord.Embed(title="Afk Meter",colour=colour).set_author(name=summonerName, icon_url=icon))
+    matches, timelines = await getSeasonMatches(accountId, timeline=True)
+    for i in range(len(matches)):
+        for participant in matches[i]["participantIdentities"]:
+            if str(participant["player"]["accountId"]) == str(accountId) :
+                id = str(participant["participantId"])
+        oldpos,afk = "None",0
+        for frame in timelines[i]["frames"]:
+            try : j = frame["participantFrames"][str(id)]["position"]
+            except : j = {"x":"None","y":"None"}
+            pos = str(j["x"])+","+str(j["y"])
+            if pos == oldpos :
+                afk += 1
+                if afk >= 2:
+                    print(str(matches[i]["gameId"]))
+                    try: count[str(matches[i]["gameId"])] += 1
+                    except: count[str(matches[i]["gameId"])] = 2
+            else: afk = 0
+            oldpos = pos
+    txt, nb, mt = "", 0, 0
+    for x,y in count.items():
+        txt += "\ngame n°" + str(x) +" : **" + str(y) +"** minute(s)"
+        nb += 1
+        mt += y
+    print("Sur les " +str(len(matches)) +" dernières parties\n" +summonerName +" a AFK **" +str(nb) +"** games pour un total de **" +str(mt) +"** minutes\n\n" +txt)
+    em = discord.Embed(title="Afk Meter :",description="Sur les " +str(len(matches)) +" dernières parties\n" +summonerName +" a AFK **" +str(nb) +"** games pour un total de **" +str(mt) +"** minutes\n\n" +txt,colour=colour)
+    await msg.edit(embed=em.set_author(name=summonerName, icon_url=icon))

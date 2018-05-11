@@ -14,7 +14,7 @@ from roll import roll,bloodlust_roll
 from random_message import *
 from latex import latex
 from money import balance
-from rgapi import kikimeter
+from rgapi import afkmeter, kikimeter
 
 logging.basicConfig(level=logging.INFO)
 client = discord.Client()
@@ -54,6 +54,7 @@ async def command(m, member, cmd, args, force):
     elif cmd == "bash" : await bash(m, member, args)
     elif cmd == "money" : await balance(m ,args, member)
     elif cmd == "kikimeter" : await kikimeter(m, args, member)
+    elif cmd == "afkmeter" : await afkmeter(m, args, member)
 
 async def bash(m, member, args):
     if member.id != 384274248799223818:
