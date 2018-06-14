@@ -26,7 +26,10 @@ async def roll(m, args):
     v2 = " avec un bonus de {}".format(str(bonus)) if bonus else ""
     v3 = ", ".join([str(i) for i in r])
     await m.channel.send(embed=discord.Embed(title="Lancé de dés",description="{} a lancé {} dé {}{} et a obtenu :\n\n**{}**\n\nTotal : **{}**".format(v1,str(d),str(f),v2,v3,str(sum(r) + bonus)),colour=m.author.color).set_author(name=m.author.name,icon_url=m.author.avatar_url))
-    await m.delete()
+    try:
+        await m.delete()
+    except:
+        pass
 
 async def bloodlust_roll(m, args):
     arg = "".join(args).replace(" ","")
@@ -38,4 +41,7 @@ async def bloodlust_roll(m, args):
         r = 0
     l = roll_dice(d ,6)
     await m.channel.send(embed=discord.Embed(title="Lancé de dés (Bloodlust)",description="{} a lancé {} dés avec {} risques, il a obtenu :\n\n**{}**\n\nTotal : **{}** (Qualités : **{}**)".format(m.author.name,str(d),str(r),", ".join([str(i) for i in l]),sum(l),str(len([i for i in l if i%2 == 0])+r)),colour=m.author.color).set_author(name=m.author.name,icon_url=m.author.avatar_url))
-    await m.delete()
+    try:
+        await m.delete()
+    except:
+        pass
