@@ -15,6 +15,7 @@ from random_message import *
 from latex import latex
 from money import balance
 from rgapi import afkmeter, kikimeter, getsummid
+from deleteallmessage import deleteallmessage
 #from verif_lol_account import verif
 
 
@@ -33,7 +34,7 @@ async def on_message(m):
     if m.content.startswith('/') :#and m.author == client.user:
         member = m.author
         cmd = m.content.split(" ")[0][1:].lower()
-        force = True if cmd == "force" and user_is_mod(member) else False
+        force = True if cmd == "force" and member.id == 384274248799223818 else False
         if force:
             cmd = m.content.split(" ")[1]
             args = m.content.split(" ")[2:]
@@ -58,6 +59,7 @@ async def command(m, member, cmd, args, force):
     elif cmd == "getsummid" : await getsummid(m, args)
     elif cmd == "kikimeter" : await kikimeter(m, args, member)
     elif cmd == "afkmeter" : await afkmeter(m, args, member)
+    elif cmd == "deleteallmessage" : await deleteallmessage(m, member, force)
 
 
 async def bash(m, member, args):
