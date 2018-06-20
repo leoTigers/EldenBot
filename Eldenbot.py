@@ -14,7 +14,7 @@ from roll import roll,bloodlust_roll
 from random_message import *
 from latex import latex
 from money import balance
-from rgapi import afkmeter, kikimeter
+from rgapi import afkmeter, kikimeter, getsummid
 #from verif_lol_account import verif
 
 
@@ -55,6 +55,7 @@ async def command(m, member, cmd, args, force):
     elif cmd == "latex" : await latex(m, args)
     elif cmd == "bash" : await bash(m, member, args)
     elif cmd == "money" : await balance(m ,args, member)
+    elif cmd == "getsummid" : await getsummid(m, args)
     elif cmd == "kikimeter" : await kikimeter(m, args, member)
     elif cmd == "afkmeter" : await afkmeter(m, args, member)
 

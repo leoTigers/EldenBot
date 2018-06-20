@@ -3,8 +3,6 @@ import requests
 import asyncio
 import discord
 
-rg = asyncio.get_event_loop()
-
 with open("private/rgapikey") as key:
     panth = pantheon.Pantheon("euw1", key.read(), True)
 
@@ -46,6 +44,16 @@ async def getSeasonMatches(accountId, timeline=False):
         allTimeline = await asyncio.gather(*timelines)
         return (allMatches, allTimeline)
     return await asyncio.gather(*tasks)
+
+
+
+
+async def getsummid(m, args):
+    accountId, summonerId, a = await getSummoner(" ".join(args))
+    await m.channel.send("summonerId : {}\naccountId : {}".format(
+        str(summonerId),str(accountId)
+    ))
+
 
 async def get_bonus(summonerId, win, totalMatches):
     bonus = {}
@@ -113,7 +121,7 @@ async def kikimeter(m, args, member):
 async def afkmeter(m, args, member):
     count = {}
     if not args: summonerName = member.name
-    else : summonerName = "".join(args)
+    else : summonerName = "".join(argns)
     accountId, summonerId, iconId = await getSummoner(summonerName)
     if not accountId :
         await m.channel.send("Invocateur non trouvé : {}".format(summonerName))
