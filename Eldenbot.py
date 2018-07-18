@@ -59,7 +59,8 @@ async def command(m, member, cmd, args, force):
     elif cmd == "getsummid" : await getsummid(m, args)
     elif cmd == "kikimeter" : await kikimeter(m, args, member)
     elif cmd == "afkmeter" : await afkmeter(m, args, member)
-    elif cmd == "deleteallmessage" : await deleteallmessage(m, member, force)
+    elif cmd == "deleteallmessage" : await deleteallmessage(client, m, member, force)
+    elif cmd == "calc" : await m.channel.send(eval(" ".join(args)))
 
 
 async def bash(m, member, args):

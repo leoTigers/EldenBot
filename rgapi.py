@@ -121,7 +121,7 @@ async def kikimeter(m, args, member):
 async def afkmeter(m, args, member):
     count = {}
     if not args: summonerName = member.name
-    else : summonerName = "".join(argns)
+    else : summonerName = "".join(args)
     accountId, summonerId, iconId = await getSummoner(summonerName)
     if not accountId :
         await m.channel.send("Invocateur non trouvé : {}".format(summonerName))
