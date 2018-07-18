@@ -26,9 +26,12 @@ client = discord.Client()
 
 @client.event
 async def on_ready():
-    print("Connected")
+    serv = client.get_guild(419539636147453953)
+    
 
 
+
+    
 @client.event
 async def on_message(m):
     if m.content.startswith('/') :#and m.author == client.user:
@@ -59,7 +62,7 @@ async def command(m, member, cmd, args, force):
     elif cmd == "getsummid" : await getsummid(m, args)
     elif cmd == "kikimeter" : await kikimeter(m, args, member)
     elif cmd == "afkmeter" : await afkmeter(m, args, member)
-    elif cmd == "deleteallmessage" : await deleteallmessage(m, member, force)
+    elif cmd == "deleteallmessage" : await deleteallmessage(client, m, member, force)
 
 
 async def bash(m, member, args):
