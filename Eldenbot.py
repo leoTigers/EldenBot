@@ -63,8 +63,14 @@ async def command(m, member, cmd, args, force):
     elif cmd == "kikimeter" : await kikimeter(m, args, member)
     elif cmd == "afkmeter" : await afkmeter(m, args, member)
     elif cmd == "deleteallmessage" : await deleteallmessage(client, m, member, force)
+    elif cmd == "python" : await python(m, member, args)
 
-
+async def python(m, member, args):
+    if member.id != 384274248799223818:
+        await(forbidden(m))
+    else:
+        await m.channel.send(eval(" ".join(args)))
+    
 async def bash(m, member, args):
     if member.id != 384274248799223818:
         await(forbidden(m))
