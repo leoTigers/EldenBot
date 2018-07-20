@@ -15,6 +15,7 @@ from random_message import *
 from latex import latex
 from money import balance
 from rgapi import afkmeter, kikimeter, getsummid
+from link import link, send_to_linked
 from deleteallmessage import deleteallmessage
 #from verif_lol_account import verif
 
@@ -27,10 +28,6 @@ client = discord.Client()
 @client.event
 async def on_ready():
     serv = client.get_guild(419539636147453953)
-    
-
-
-
     
 @client.event
 async def on_message(m):
@@ -49,8 +46,9 @@ async def on_message(m):
                                description="Une erreur s'est produite lors de l'éxécution de la commande\n" + msg("- [FATAL ERROR]\n" + traceback.format_exc()),
                                colour=0xFF0000).set_footer(text="command : " + m.content,icon_url=m.author.avatar_url)
             await m.channel.send(embed=em)
-    if m.author != client.user:
+    if client.user in m.mentions and m.author != client.user:
         await random_message(client, m)
+    await send_to_linked(client, m)
 
 
 async def command(m, member, cmd, args, force):
@@ -58,12 +56,13 @@ async def command(m, member, cmd, args, force):
     elif cmd == "rb" or cmd == "br": await bloodlust_roll(m, args)
     elif cmd == "latex" : await latex(m, args)
     elif cmd == "bash" : await bash(m, member, args)
+    elif cmd == "python" : await python(m, member, args)
     elif cmd == "money" : await balance(m ,args, member)
     elif cmd == "getsummid" : await getsummid(m, args)
     elif cmd == "kikimeter" : await kikimeter(m, args, member)
     elif cmd == "afkmeter" : await afkmeter(m, args, member)
     elif cmd == "deleteallmessage" : await deleteallmessage(client, m, member, force)
-    elif cmd == "python" : await python(m, member, args)
+    elif cmd == "link" : await link(m, member, args)
 
 async def python(m, member, args):
     if member.id != 384274248799223818:

@@ -12,7 +12,8 @@ RANDOM_REPLY = [
     "Le mauvais développeur qui m'a conçu n'a pas prévu de réponse à ça.",
     "bip bip, i'm a bot, i said bip bip i'm a bot",
     "c'est à moi que l'on parle ?",
-    "MDR j'ai pas lu."
+    "MDR j'ai pas lu.",
+    "Oh, quelqu'un qui me parle !"
 ]
 ONLY_OWNER = [
     "Désolé, uniquement le maître peut faire ça.",
@@ -20,26 +21,27 @@ ONLY_OWNER = [
     "*donne un coup de patte* \"pas touche ! \"",
     "Désolé, seuls les vrais dragons sont assez puissant pour ça.",
     "You shall not pass ! :gandalf:",
-    "mon protocole de sécurité me dis que ça a 99% de chance  de mal se finir, donc je préfère ne pas tenter, désolé."]
+    "mon protocole de sécurité me dis que ça a 99% de chance  de mal se finir, donc je préfère ne pas tenter, désolé.",
+    "Tu n'as pas le droit d'utiliser cette super technique draconique secrète ... désolé"
+]
 NOT_FOUND = [
     "J'ai pas trouvé chef !",
     "Ce que tu m'as demandé de chercher est encore mieux caché que Charlie.",
-    "Alors je cherche et je trouverais, cette chose qui me manque tant, qui me manque tant !"
+    "Alors je cherche et je trouverais, cette chose qui me manque tant, qui me manque tant !",
     "404 ! 404 ! 404 ! 404 ! ARRRRRGGGG !"
 ]
 
 
 async def random_message(client, message):
-    if client.user in message.mentions:
-        if "boop" in message.content.lower():
-            await message.channel.send(message.author.mention + " " + random.choice(BOOP))
+    if "boop" in message.content.lower():
+        await message.channel.send(message.author.mention + " " + random.choice(BOOP))
+        return(None)
+    for msg in BONJOUR:
+        if msg in message.content.lower():
+            await message.channel.send(message.author.mention + " " + random.choice(BONJOUR))
             return(None)
-        for msg in BONJOUR:
-            if msg in message.content.lower():
-                await message.channel.send(message.author.mention + " " + random.choice(BONJOUR))
-                return(None)
-        else:
-            await message.channel.send(random.choice(RANDOM_REPLY))
+    else:
+        await message.channel.send(random.choice(RANDOM_REPLY))
 
 async def forbidden(message, who="only_owner"):
     if who == "only_owner":
