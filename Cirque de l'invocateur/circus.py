@@ -245,19 +245,12 @@ async def update_msg():
     for event, pl in data.items():
         txt += "**{}**:\n{}\n\n".format(
             event.capitalize(),
-            ", ".join([MENTION(i) if str_is_number(i) else i for i in pl ]))
+            ", ".join([MENTION(i) if str(i).isdigit() else i for i in pl ]))
     await msg.edit(content=txt)
     
 def save_data():
     with open("../private/circus.data", 'w') as fd:
         fd.write(json.dumps(data))
 
-def str_is_number(txt):
-    try:
-        int(txt)
-        return True
-    except:
-        return False
-    
 with open("../private/token") as fd:
     client.run(json.load(fd))
