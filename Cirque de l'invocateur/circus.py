@@ -1,25 +1,42 @@
 #!/usr/bin/python3
+from pantheon import pantheon
+import time
 import discord
 import asyncio
 import logging
 import traceback
 import json
 
+with open("../private/rgapikey") as key:
+    panth = pantheon.Pantheon("euw1", key.read(), True)
+    
 def load_data():
     try:
         print("loading data ...")
         with open("../private/circus.data", 'r') as fd:
-            return (json.loads(fd.read()))
+            data = json.loads(fd.read())
     except:
         print("IMPOSSIBLE DE LOAD ../private/circus.data")
-        return ({})
+        data = {}
+    try:
+        print("loading summoners ...")
+        with open("../private/summoners.data", 'r') as fd:
+            summ = json.loads(fd.read())
+    except:
+        print("IMPOSSIBLE DE LOAD ../private/summoners.data")
+        summ = {}
+    return (data, summ)
 
 logging.basicConfig(level=logging.INFO)
 client = discord.Client()
-data = load_data()
+data, summoners = load_data()
+start_msg = None
+FORUM_GUILD_ID = 367683573014069249
 CIRCUS_GUILD_ID = 466950374243303434
 REG_CHANNEL_ID = 466961756393046017
-MSG_ID = 470682973864329216
+LINK_CHANNEL_ID = 474254945764376577
+MSG_ID = 474227467414929420
+ALREADY_VERIFIED = "{} est déjà vérifié sur le discord du forum (SummonerId : {})"
 FORBIDDEN = "Désolé, seuls les Organisateurs peuvent utiliser cette commande."
 MISSING_ARG = "Erreur : Argument manquant"
 NOT_FOUND = "Membre non trouvé"
@@ -27,24 +44,61 @@ FORCE_REGISTED = "{} a été inscrit de force à l'évenement {} par {}"
 FORCE_UNREGISTED = "{} a été désinscrit de force à l'évenement {} par {}"
 PRE_REGISTED = "{} a été préinscrit à l'évenement {} par {}"
 REREGISTED = "{} s'est fait reregister sur l'évenement {}"
+READYCHECK = "__**Vérification de présence !**__\n\nprésent: {}\nabsent: {}\n\ntemps restant: {}"
+def TIME(x): return ("{}:{}".format(int(x) // 60, str(int(x) % 60).zfill(2)))
 def MENTION(discord_id): return ("<@{}>".format(discord_id))
 
 @client.event
 async def on_ready():
     print("Connected (cirque de l'invocateur)")
     await update_msg()
-    
+    for member in client.get_guild(CIRCUS_GUILD_ID).members:
+        await verif(member)
+
+@client.event
+async def on_member_join(member):
+    if member.guild.id == CIRCUS_GUILD_ID:
+        await verif(member)
+
+async def verif(member):
+    forum = client.get_guild(FORUM_GUILD_ID)
+    lie = discord.utils.get(member.guild.roles, id=474254455194517504)
+    if lie not in member.roles:
+        fmember = forum.get_member(member.id)
+        if "Vérifié" in [role.name for role in fmember.roles]:
+            data = await panth.getSummonerByName(fmember.display_name)
+            name, summId = data['name'], data['id']
+            summoners[str(member.id)] = summId
+            link_channel = client.get_channel(LINK_CHANNEL_ID)
+            try:
+                await member.edit(nick=name)
+            except discord.errors.Forbidden:
+                pass
+            await member.add_roles(lie, reason="Vérifié sur le discord du forum")
+            await link_channel.send(ALREADY_VERIFIED.format(str(member), summId))
+            save_summ()
+    else:
+        data = await panth.getSummonerByName(member.display_name)
+        try:
+            await member.edit(nick=data["name"])
+        except:
+            pass
+
 @client.event
 async def on_message(message):
     if message.guild.id == CIRCUS_GUILD_ID:
         try:
-            if message.content.startswith('+'):
+            if message.channel.id == LINK_CHANNEL_ID and \
+               "Lié" not in [x.name for x in message.guild.roles]:
+                pass
+            if message.content.startswith('+') and message.channel.id == REG_CHANNEL_ID:
                 await register(message)
-            if message.content.startswith('-'):
+            if message.content.startswith('-') and message.channel.id == REG_CHANNEL_ID:
                 await unregister(message)
             if message.content.startswith('/'):
                 av = message.content.split(' ')
                 while '' in av : av.remove('')
+                if av[0] == "/start" : await start_game(message, av)
                 if av[0] == "/create" : await create(message, av)
                 if av[0] == "/delete" : await delete(message, av)
                 if av[0] == "/preregister" : await pre_register(message, av)
@@ -112,6 +166,7 @@ async def pre_register(message, av):
                                                    event_name.capitalize(),
                                                    message.author.mention))
     await update_msg()
+    await message.delete()
 
 async def reregister(message, av):
     if not await is_authorised(message):
@@ -150,6 +205,7 @@ async def unpre_register(message, av):
                                                        event_name.capitalize(),
                                                        message.author.mention))
     await update_msg()
+    await message.delete()
     
 def get_member_id(message, txt):
     try:
@@ -185,6 +241,7 @@ async def force_register(message, av):
                                                      event_name.capitalize(),
                                                      message.author.mention))
     await update_msg()
+    await message.delete()
 
 async def force_unregister(message, av):
     if not await is_authorised(message):
@@ -208,6 +265,7 @@ async def force_unregister(message, av):
                                                        event_name.capitalize(),
                                                        message.author.mention))
     await update_msg()
+    await message.delete()
     
     
 async def create(message, av):
@@ -222,6 +280,8 @@ async def create(message, av):
         return False
     data[event_name] = []
     await update_msg()
+    await message.channel.send("evenement ajouté")
+    await message.delete()
 
 
 async def delete(message, av):
@@ -236,7 +296,10 @@ async def delete(message, av):
         return False
     del data[event_name]
     await update_msg()
+    await message.channel.send("evenement supprimé")
+    await message.delete()
 
+    
 async def update_msg():
     save_data()
     channel = client.get_channel(REG_CHANNEL_ID)
@@ -247,10 +310,39 @@ async def update_msg():
             event.capitalize(),
             ", ".join([MENTION(i) if str(i).isdigit() else i for i in pl ]))
     await msg.edit(content=txt)
-    
+
+async def start_game(message, av):
+    global start_msg
+    await message.delete()
+    channel = client.get_channel(REG_CHANNEL_ID)
+    game = av[1].lower()
+    timer = time.time() + (360 if len(av) == 2 else int(av[2])) 
+    start_msg = await message.channel.send(
+        READYCHECK.format("",
+                          ", ".join([MENTION(i) for i in data[game]]),
+                          TIME(timer - time.time())))
+    await start_msg.add_reaction("✔")
+    while timer - time.time() >= 0 :
+        try:
+            start_msg = await channel.get_message(start_msg.id)
+            ready = await start_msg.reactions[0].users().flatten()
+            ready = [i.id for i in ready]
+            await start_msg.edit(content=\
+                READYCHECK.format(", ".join([MENTION(i) for i in data[game] if i in ready]),
+                                  ", ".join([MENTION(i) for i in data[game] if i not in ready]),
+                                  TIME(timer - time.time())))
+        except:
+            pass
+        await asyncio.sleep(0.5)
+    print("done")
+
 def save_data():
     with open("../private/circus.data", 'w') as fd:
         fd.write(json.dumps(data))
+
+def save_summ():
+    with open("../private/summoners.data", 'w') as fd:
+        fd.write(json.dumps(summoners))
 
 with open("../private/token") as fd:
     client.run(json.load(fd))
