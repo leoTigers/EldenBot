@@ -25,6 +25,16 @@ async def getSummoner(name):
         return (data["accountId"], data["id"], data["profileIconId"])
     except:
         return (None, None, None)
+
+async def getAllMatchHistory(accountId):
+    index = 0
+    tasks = []
+    while True:
+        matchs = await panth.getMatchlist(accountId, params={"beginIndex":index})
+        tasks += [panth.getMatch(match["gameId"]) for match in matchs['matches']]
+        index += 100
+        if matchs["endIndex"] != index: break
+    return await asyncio.gather(*tasks)
     
 async def getSoloQSeasonMatches(accountId):
     soloQ =  await panth.getMatchlist(accountId, params={"queue":420,"season":11})
@@ -46,7 +56,28 @@ async def getSeasonMatches(accountId, timeline=False):
     return await asyncio.gather(*tasks)
 
 
-
+async def premade(message, args, member):
+    if not args : summonerName = member.name
+    else : summonerName = " ".join(args)
+    accountId, summonerId, iconId = await getSummoner(summonerName)
+    result = {}
+    matchs = await getAllMatchHistory(accountId)
+    for match in matchs:
+        print(match["participantIdentities"])
+        for player in [i["player"]["summonerId"] for i in match["participantIdentities"]
+                       if "summonerId" in i["player"].keys()
+                       and i["player"]["summonerId"] != summonerId]:
+            print(result)
+            if player in result.keys(): result[player] += 1
+            else : result[player] = 1
+    r = []
+    i = max(result.values())
+    d = result.items()
+    while i >= 5:
+        r += [(summ, nb) for summ, nb in d if nb == i]
+        i -= 1
+    tasks = [panth.getSummoner(summonerId) for summonerId, nb in r]
+    await asyncio.gather(*tasks)
 
 async def getsummid(m, args):
     accountId, summonerId, a = await getSummoner(" ".join(args))
