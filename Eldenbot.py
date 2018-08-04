@@ -14,7 +14,7 @@ from roll import roll,bloodlust_roll
 from random_message import *
 from latex import latex
 from money import balance
-from rgapi import afkmeter, kikimeter, getsummid
+from rgapi import afkmeter, kikimeter, getsummid, premade
 from link import link, send_to_linked
 from deleteallmessage import deleteallmessage
 #from verif_lol_account import verif
@@ -52,7 +52,8 @@ async def on_message(m):
 
 
 async def command(m, member, cmd, args, force):
-    if cmd == "r" or cmd == "roll" : await roll(m, args)
+    if cmd == "help" : await disphelp(m)
+    elif cmd == "r" or cmd == "roll" : await roll(m, args)
     elif cmd == "rb" or cmd == "br": await bloodlust_roll(m, args)
     elif cmd == "latex" : await latex(m, args)
     elif cmd == "bash" : await bash(m, member, args)
@@ -61,8 +62,13 @@ async def command(m, member, cmd, args, force):
     elif cmd == "getsummid" : await getsummid(m, args)
     elif cmd == "kikimeter" : await kikimeter(m, args, member)
     elif cmd == "afkmeter" : await afkmeter(m, args, member)
+    elif cmd == "premade" : await premade(m, args, member)
     elif cmd == "deleteallmessage" : await deleteallmessage(client, m, member, force)
     elif cmd == "link" : await link(m, member, args)
+
+async def disphelp(message):
+    with open("help", 'r') as fd:
+        await message.channel.send(fd.read())
 
 async def python(m, member, args):
     if member.id != 384274248799223818:
