@@ -27,7 +27,7 @@ client = discord.Client()
 
 @client.event
 async def on_ready():
-    serv = client.get_guild(419539636147453953)
+    print("Connected")
     
 @client.event
 async def on_message(m):

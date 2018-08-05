@@ -2,6 +2,7 @@ from pantheon import pantheon
 import requests
 import asyncio
 import discord
+import time
 
 with open("private/rgapikey") as key:
     panth = pantheon.Pantheon("euw1", key.read(), True)
@@ -26,11 +27,13 @@ async def getSummoner(name):
     except:
         return (None, None, None)
 
-async def getAllMatchHistory(accountId):
+async def getLastYearHistory(accountId):
     index = 0
     tasks = []
+    begin = int(time.time()) * 1000 - 31536000000
+    print(begin)
     while True:
-        matchs = await panth.getMatchlist(accountId, params={"beginIndex":index})
+        matchs = await panth.getMatchlist(accountId, params={"beginIndex":index, "beginTime":begin})
         tasks += [panth.getMatch(match["gameId"]) for match in matchs['matches']]
         index += 100
         if matchs["endIndex"] != index: break
@@ -61,23 +64,26 @@ async def premade(message, args, member):
     else : summonerName = " ".join(args)
     accountId, summonerId, iconId = await getSummoner(summonerName)
     result = {}
-    matchs = await getAllMatchHistory(accountId)
+    msg = await message.channel.send("Récupération de l'historique")
+    matchs = await getLastYearHistory(accountId)
+    await msg.edit(content="Analyse des matchs")
     for match in matchs:
-        print(match["participantIdentities"])
         for player in [i["player"]["summonerId"] for i in match["participantIdentities"]
                        if "summonerId" in i["player"].keys()
                        and i["player"]["summonerId"] != summonerId]:
-            print(result)
             if player in result.keys(): result[player] += 1
             else : result[player] = 1
-    r = []
-    i = max(result.values())
-    d = result.items()
-    while i >= 5:
-        r += [(summ, nb) for summ, nb in d if nb == i]
-        i -= 1
+    await msg.edit(content="Tri des données")
+    result = {player : nb for player, nb in result.items() if nb >= 5}
+    r = sorted(result.items(), key=lambda x: x[1])[::-1]
+    await msg.edit(content="Récupération des noms d'invocateur")
     tasks = [panth.getSummoner(summonerId) for summonerId, nb in r]
-    await asyncio.gather(*tasks)
+    response = await asyncio.gather(*tasks)
+    txt = "```Invocateurs rencontrés les 365 derniers jours :\n{}```".format(
+        "\n".join(["{:>3}: {}".format(r[i][1], response[i]['name']) for i in range(len(r))]))
+    if len(txt) >= 2000 : txt = txt[:1996] + "```"
+    await msg.edit(content=txt)
+    
 
 async def getsummid(m, args):
     accountId, summonerId, a = await getSummoner(" ".join(args))
@@ -184,6 +190,5 @@ async def afkmeter(m, args, member):
         txt += "\ngame n°" + str(x) +" : **" + str(y) +"** minute(s)"
         nb += 1
         mt += y
-    print("Sur les " +str(len(matches)) +" dernières parties\n" +summonerName +" a AFK **" +str(nb) +"** games pour un total de **" +str(mt) +"** minutes\n\n" +txt)
     em = discord.Embed(title="Afk Meter :",description="Sur les " +str(len(matches)) +" dernières parties\n" +summonerName +" a AFK **" +str(nb) +"** games pour un total de **" +str(mt) +"** minutes\n\n" +txt,colour=colour)
     await msg.edit(embed=em.set_author(name=summonerName, icon_url=icon))
