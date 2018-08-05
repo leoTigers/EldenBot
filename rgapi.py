@@ -79,10 +79,14 @@ async def premade(message, args, member):
     await msg.edit(content="Récupération des noms d'invocateur")
     tasks = [panth.getSummoner(summonerId) for summonerId, nb in r]
     response = await asyncio.gather(*tasks)
-    txt = "```Invocateurs rencontrés les 365 derniers jours :\n{}```".format(
+    txt = "```{}```".format(
         "\n".join(["{:>3}: {}".format(r[i][1], response[i]['name']) for i in range(len(r))]))
     if len(txt) >= 2000 : txt = txt[:1996] + "```"
-    await msg.edit(content=txt)
+    em = discord.Embed(title="Invocateurs rencontrés les 365 derniers jours",
+                       description=txt)
+    em.set_author(name=summonerName,
+                  icon_url="http://ddragon.canisback.com/latest/img/profileicon/"+str(iconId)+".png")
+    await msg.edit(content="done", embed=em)
     
 
 async def getsummid(m, args):
