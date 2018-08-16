@@ -1,5 +1,7 @@
 #!/usr/bin/python3
+from flask import Flask, request
 from pantheon import pantheon
+import threading
 import time
 import discord
 import asyncio
@@ -28,7 +30,9 @@ def load_data():
     return (data, summ)
 
 logging.basicConfig(level=logging.INFO)
+loop = asyncio.get_event_loop()
 client = discord.Client()
+app = Flask(__name__)
 data, summoners = load_data()
 start_msg = None
 FORUM_GUILD_ID = 367683573014069249
@@ -48,10 +52,32 @@ READYCHECK = "__**Vérification de présence !**__\n\nprésent: {}\nabsent: {}\n
 def TIME(x): return ("{}:{}".format(int(x) // 60, str(int(x) % 60).zfill(2)))
 def MENTION(discord_id): return ("<@{}>".format(discord_id))
 
+
+class ServerThread(threading.Thread):
+    def __init__(self):
+        threading.Thread.__init__(self)
+    def run(self):
+        app.run(port=80)
+
+@app.route('/rgapicallback', methods=['POST'])
+def rgapicallback():
+    #loop = asyncio.get_event_loop()
+    dic = request.data
+    dic = json.loads(dic)
+    try:
+        loop.run_until_complete(game_ended(dic["shortCode"]))
+    except RuntimeError:
+        pass
+
+async def game_ended(tournamentCode):
+    channel = client.get_channel(476382883364208670)
+    await channel.send("Game terminé ! (" + tournamentCode + ")")
+
 @client.event
 async def on_ready():
     print("Connected (cirque de l'invocateur)")
     await update_msg()
+    ServerThread().start()
     for member in client.get_guild(CIRCUS_GUILD_ID).members:
         await verif(member)
 
@@ -59,6 +85,30 @@ async def on_ready():
 async def on_member_join(member):
     if member.guild.id == CIRCUS_GUILD_ID:
         await verif(member)
+
+
+def get_event(emoji):
+    for event_name, dic in data.items():
+        if dic["emoji"] == emoji:
+            return event_name
+    return None
+        
+@client.event
+async def on_raw_reaction_add(payload):
+    if payload.message_id == MSG_ID:
+        member = client.get_guild(CIRCUS_GUILD_ID).get_member(payload.user_id)
+        event_name = get_event(payload.emoji) #return None if no event was found
+        if event_name:
+            await do_register(client.channel(REG_CHANNEL_ID), member, event_name)
+
+@client.event
+async def on_raw_reaction_remove(payload):
+    if payload.message_id == MSG_ID:
+        member = client.get_guild(CIRCUS_GUILD_ID).get_member(payload.user_id)
+        event_name = get_event(payload.emoji) #return None if no event was found
+        if event_name:
+            await do_unregister(client.channel(REG_CHANNEL_ID), member, event_name)
+
 
 async def verif(member):
     forum = client.get_guild(FORUM_GUILD_ID)
@@ -106,6 +156,12 @@ async def on_message(message):
                 if av[0] == "/reregister" : await reregister(message, av)
                 if av[0] == "/forceregister" : await force_register(message, av)
                 if av[0] == "/forceunregister" : await force_unregister(message, av)
+                if av[0] == "/close" : await change_close_status(message, av, True)
+                if av[0] == "/open" : await change_close_status(message, av, False)
+                if av[0] == "/hide" : await change_hidden_status(message, av, True)
+                if av[0] == "/show" : await change_hidden_status(message, av, False)
+                if av[0] == "/emoji" : await change_event_icon(message, av)
+                if av[0] == "/description" : await change_event_description(message, av)
         except Exception:
             await message.channel.send("```diff\n-[Erreur]\n" + traceback.format_exc() + "```")
 
@@ -114,38 +170,51 @@ async def is_authorised(message):
     perm = message.author.guild_permissions
     if perm.administrator or perm.manage_channels or perm.manage_guild:
         return True
-    await message.channel.send(FORBIDDEN)
+    await message.channel.send(FORBIDDEN, delete_after=10)
     return False
+
+async def do_register(channel, member, event_name):
+    if event_name not in data.keys():
+        await channel.send("L'évenement n'existe pas.", delete_after=60)
+        return False
+    discord_id = member.id
+    if discord_id in data[event_name]["registed"]:
+        await channel.send("Vous êtes déjà inscrit.", delete_after=60)
+        return False
+    if data[event_name]["close"]:
+        await channel.send("Les inscriptions sont fermées", delete_after=60)
+        return False
+    data[event_name]["registed"].append(discord_id)
+    await channel.send("{} s'est inscrit à l'évenement {}".format(
+        MENTION(discord_id), event_name.capitalize()),
+                               detele_after=60)
+    await update_msg()
+
+async def do_unregister(channel, member, event_name):
+    if event_name not in data.keys():
+        await channel.send("L'évenement n'existe pas.", delete_after=60)
+        return False
+    discord_id = member.id
+    if discord_id not in data[event_name]["registed"]:
+        await channel.send("Vous êtes déjà désinscrit.", delete_after=60)
+        return False
+    data[event_name]["registed"].remove(discord_id)
+    await channel.send("{} s'est désinscrit à l'évenement {}".format(
+        MENTION(discord_id), event_name.capitalize()), delete_after=60)
+    await update_msg()
 
 
 async def register(message):
+    await message.delete()
     event_name = message.content.split('+')[1].lower()
-    if event_name not in data.keys():
-        await message.channel.send("L'évenement n'existe pas.")
-        return False
-    discord_id = message.author.id
-    if discord_id in data[event_name]["registed"]:
-        await message.channel.send("Vous êtes déjà inscrit.")
-        return False
-    data[event_name]["registed"].append(discord_id)
-    await message.channel.send("{} s'est inscrit à l'évenement {}".format(
-        MENTION(discord_id), event_name.capitalize()))
-    await update_msg()
+    await do_register(message.channel, message.author, event_name)
 
     
 async def unregister(message):
+    await message.delete()
     event_name = message.content.split('-')[1].lower()
-    if event_name not in data.keys():
-        await message.channel.send("L'évenement n'existe pas.")
-        return False
-    discord_id = message.author.id
-    if discord_id not in data[event_name]["registed"]:
-        await message.channel.send("Vous êtes déjà désinscrit.")
-        return False
-    data[event_name]["registed"].remove(discord_id)
-    await message.channel.send("{} s'est désinscrit à l'évenement {}".format(
-        MENTION(discord_id), event_name.capitalize()))
-    await update_msg()
+    await do_unregister(message.channel, message.author, event_name)
+
 
 async def pre_register(message, av):
     if not await is_authorised(message):
@@ -156,15 +225,16 @@ async def pre_register(message, av):
     name = av[1]
     event_name = av[2].lower()
     if event_name not in data.keys():
-        await message.channel.send("L'évenement n'existe pas.")
+        await message.channel.send("L'évenement n'existe pas.", delete_after=60)
         return False
     if name in data[event_name]["registed"]:
-        await message.channel.send("Le membre est déjà préinscrit")
+        await message.channel.send("Le membre est déjà préinscrit", delete_after=60)
         return False
     data[event_name]["registed"].append(name)
     await message.channel.send(PRE_REGISTED.format(name,
                                                    event_name.capitalize(),
-                                                   message.author.mention))
+                                                   message.author.mention),
+                               delete_after=60)
     await update_msg()
     await message.delete()
 
@@ -172,40 +242,95 @@ async def reregister(message, av):
     if not await is_authorised(message):
         return False
     if len(av) < 3:
-        await message.channel.send(MISSING_ARG)
+        await message.channel.send(MISSING_ARG, delete_after=60)
         return False
     name = av[1]
     discord_id = get_member_id(message, av[2])
     if not discord_id:
-        await message.channel.send(NOT_FOUND)
+        await message.channel.send(NOT_FOUND, delete_after=60)
         return False
     for event, dic in data.items():
         for i in range(len(dic["registed"])):
             if dic["registed"][i] == name:
                 dic["registed"][i] = discord_id
                 await message.channel.send(REREGISTED.format(name,
-                                                             event.capitalize()))
+                                                             event.capitalize()),
+                                           delete_after=60)
 
 async def unpre_register(message, av):
     if not await is_authorised(message):
         return False
     if len(av) < 3:
-        await message.channel.send(MISSING_ARG)
+        await message.channel.send(MISSING_ARG, delete_after=60)
         return False
     name = av[1]
     event_name = av[2].lower()
     if event_name not in data.keys():
-        await message.channel.send("L'évenement n'existe pas.")
+        await message.channel.send("L'évenement n'existe pas.", delete_after=60)
         return False
     if name not in data[event_name]["registed"]:
-        await message.channel.send("Le membre est déjà préinscrit")
+        await message.channel.send("Le membre est déjà préinscrit", delete_after=60)
         return False
     data[event_name]["registed"].remove(name)
     await message.channel.send(FORCE_UNREGISTED.format(name,
                                                        event_name.capitalize(),
-                                                       message.author.mention))
+                                                       message.author.mention),
+                               delete_after=60)
     await update_msg()
     await message.delete()
+
+async def change_hidden_status(message, av, status):
+    if not await is_authorised(message):
+        return False
+    if len(av) < 2:
+        await message.channel.send(MISSING_ARG, delete_after=60)
+        return False
+    event_name = av[1].lower()
+    if event_name not in data.keys():
+        await message.channel.send("L'évenement n'existe pas.", delete_after=60)
+        return False
+    data[event_name]["hidden"] = status
+    if status : del_all_reactions(data[event_name]["emoji"])
+
+
+async def change_close_status(message, av, status):
+    if not await is_authorised(message):
+        return False
+    if len(av) < 2:
+        await message.channel.send(MISSING_ARG, delete_after=60)
+        return False
+    event_name = av[1].lower()
+    if event_name not in data.keys():
+        await message.channel.send("L'évenement n'existe pas.", delete_after=60)
+        return False
+    data[event_name]["close"] = status
+    if status : del_all_reactions(data[event_name]["emoji"])
+
+async def change_event_icon(message, av):
+    if not await is_authorised(message):
+        return False
+    if len(av) < 2:
+        await message.channel.send(MISSING_ARG, delete_after=60)
+        return False
+    event_name = av[1].lower()
+    if event_name not in data.keys():
+        await message.channel.send("L'évenement n'existe pas.", delete_after=60)
+        return False
+    data[event_name]["emoji"] = av[2]
+
+    
+async def change_event_description(message, av):
+    if not await is_authorised(message):
+        return False
+    if len(av) < 2:
+        await message.channel.send(MISSING_ARG, delete_after=60)
+        return False
+    event_name = av[1].lower()
+    if event_name not in data.keys():
+        await message.channel.send("L'évenement n'existe pas.", delete_after=60)
+        return False
+    data[event_name]["description"] = " ".join(av[2:])
+    
     
 def get_member_id(message, txt):
     try:
@@ -223,23 +348,23 @@ async def force_register(message, av):
     if not await is_authorised(message):
         return False
     if len(av) < 3:
-        await message.channel.send(MISSING_ARG)
+        await message.channel.send(MISSING_ARG, delete_after=60)
         return False
     discord_id = get_member_id(message, av[1])
     if not discord_id:
-        await message.channel.send(NOT_FOUND)
+        await message.channel.send(NOT_FOUND, delete_after=60)
         return False
     event_name = av[2].lower()
     if event_name not in data.keys():
-        await message.channel.send("L'évenement n'existe pas.")
+        await message.channel.send("L'évenement n'existe pas.", delete_after=60)
         return False
     if discord_id in data[event_name]["registed"]:
-        await message.channel.send("Le membre est déjà inscrit")
+        await message.channel.send("Le membre est déjà inscrit", delete_after=60)
         return False
     data[event_name]["registed"].append(discord_id)
     await message.channel.send(FORCE_REGISTED.format(MENTION(discord_id),
                                                      event_name.capitalize(),
-                                                     message.author.mention))
+                                                     message.author.mention), delete_after=60)
     await update_msg()
     await message.delete()
 
@@ -247,23 +372,23 @@ async def force_unregister(message, av):
     if not await is_authorised(message):
         return False
     if len(av) < 3:
-        await message.channel.send(MISSING_ARG)
+        await message.channel.send(MISSING_ARG, delete_after=60)
         return False
     discord_id = get_member_id(message, av[1])
     if not discord_id:
-        await message.channel.send(NOT_FOUND)
+        await message.channel.send(NOT_FOUND, delete_after=60)
         return False
     event_name = av[2].lower()
     if event_name not in data.keys():
-        await message.channel.send("L'évenement n'existe pas.")
+        await message.channel.send("L'évenement n'existe pas.", delete_after=60)
         return False
     if discord_id not in data[event_name]["registed"]:
-        await message.channel.send("Le membre est déjà désinscrit")
+        await message.channel.send("Le membre est déjà désinscrit", delete_after=60)
         return False
     data[event_name]["registed"].remove(discord_id)
     await message.channel.send(FORCE_UNREGISTED.format(MENTION(discord_id),
                                                        event_name.capitalize(),
-                                                       message.author.mention))
+                                                       message.author.mention), delete_after=60)
     await update_msg()
     await message.delete()
     
@@ -272,11 +397,11 @@ async def create(message, av):
     if not await is_authorised(message):
         return False
     if len(av) < 3:
-        await message.channel.send(MISSING_ARG)
+        await message.channel.send(MISSING_ARG, delete_after=60)
         return False
     event_name = av[1].lower()
     if event_name in data.keys():
-        await message.channel.send("L'évenement existe déjà.")
+        await message.channel.send("L'évenement existe déjà.", delete_after=60)
         return False
     data[event_name] = {}
     data[event_name]["registed"] = []
@@ -285,8 +410,9 @@ async def create(message, av):
     data[event_name]["emoji"] = av[2]
     data[event_name]["description"] = " ".join(av[3:]) if len(av) > 3 else None
     data[event_name]["timestamp"] = None
+    await add_reaction(data[event_name]["emoji"])
     await update_msg()
-    await message.channel.send("evenement ajouté")
+    await message.channel.send("evenement ajouté", delete_after=60)
     await message.delete()
 
 
@@ -294,15 +420,16 @@ async def delete(message, av):
     if not await is_authorised(message):
         return False
     if len(av) < 2:
-        await message.channel.send(MISSING_ARG)
+        await message.channel.send(MISSING_ARG, delete_after=60)
         return False
     event_name = av[1].lower()
     if event_name not in data.keys():
-        await message.channel.send("L'évenement n'existe pas.")
+        await message.channel.send("L'évenement n'existe pas.", delete_after=60)
         return False
+    await del_all_reactions(data[event_name]["emoji"])
     del data[event_name]
     await update_msg()
-    await message.channel.send("evenement supprimé")
+    await message.channel.send("evenement supprimé", delete_after=60)
     await message.delete()
 
     
@@ -312,11 +439,12 @@ async def update_msg():
     msg = await channel.get_message(MSG_ID)
     txt = "__Liste des inscrits__:\n\n"
     for event, dic in data.items():
-        txt += "__**{}**__:\n{}inscrits {}: {}\n\n".format(
-            event.capitalize(),
-            (dic["description"] + '\n') if dic["description"] else "",
-            "(fermé) " if dic["close"] else "",
-            ", ".join([MENTION(i) if str(i).isdigit() else i for i in dic["registed"]]))
+        if not dic["hidden"]:
+            txt += "__**{}**__:\n{}inscrits {}: {}\n\n".format(
+                event.capitalize(),
+                (dic["description"] + '\n') if dic["description"] else "",
+                "(fermé) " if dic["close"] else "",
+                ", ".join([MENTION(i) if str(i).isdigit() else i for i in dic["registed"]]))
     await msg.edit(content=txt)
 
 async def start_game(message, av):
@@ -345,6 +473,14 @@ async def start_game(message, av):
         await asyncio.sleep(0.5)
     print("done")
 
+async def del_all_reactions(emoji):
+    channel = client.get_channel(REG_CHANNEL_ID)
+    msg = await channel.get_message(MSG_ID)
+    for reaction in reactions:
+        if reaction.emoji == emoji:
+            async for user in reaction.users():
+                await msg.remove_reaction(emoji, user)
+    
 def save_data():
     with open("../private/circus.data", 'w') as fd:
         fd.write(json.dumps(data))
