@@ -166,12 +166,14 @@ async def on_message(message):
             await message.channel.send("```diff\n-[Erreur]\n" + traceback.format_exc() + "```")
 
 
-async def is_authorised(message):
-    perm = message.author.guild_permissions
-    if perm.administrator or perm.manage_channels or perm.manage_guild:
-        return True
-    await message.channel.send(FORBIDDEN, delete_after=10)
-    return False
+def authorised(func):
+    async def wrapper(message, *args, **kwargs):
+        perm = message.author.guild_permissions
+        if perm.administrator or perm.manage_channels or perm.manage_guild:
+            await func(message, *args, **kwargs)
+        else:
+            await message.channel.send(FORBIDDEN, delete_after=10)
+    return wrapper
 
 async def do_register(channel, member, event_name):
     if event_name not in data.keys():
@@ -215,10 +217,8 @@ async def unregister(message):
     event_name = message.content.split('-')[1].lower()
     await do_unregister(message.channel, message.author, event_name)
 
-
+@authorised
 async def pre_register(message, av):
-    if not await is_authorised(message):
-        return False
     if len(av) < 3:
         await message.channel.send(MISSING_ARG)
         return False
@@ -238,9 +238,8 @@ async def pre_register(message, av):
     await update_msg()
     await message.delete()
 
+@authorised
 async def reregister(message, av):
-    if not await is_authorised(message):
-        return False
     if len(av) < 3:
         await message.channel.send(MISSING_ARG, delete_after=60)
         return False
@@ -257,9 +256,8 @@ async def reregister(message, av):
                                                              event.capitalize()),
                                            delete_after=60)
 
+@authorised
 async def unpre_register(message, av):
-    if not await is_authorised(message):
-        return False
     if len(av) < 3:
         await message.channel.send(MISSING_ARG, delete_after=60)
         return False
@@ -279,9 +277,8 @@ async def unpre_register(message, av):
     await update_msg()
     await message.delete()
 
+@authorised
 async def change_hidden_status(message, av, status):
-    if not await is_authorised(message):
-        return False
     if len(av) < 2:
         await message.channel.send(MISSING_ARG, delete_after=60)
         return False
@@ -293,9 +290,8 @@ async def change_hidden_status(message, av, status):
     if status : del_all_reactions(data[event_name]["emoji"])
 
 
+@authorised
 async def change_close_status(message, av, status):
-    if not await is_authorised(message):
-        return False
     if len(av) < 2:
         await message.channel.send(MISSING_ARG, delete_after=60)
         return False
@@ -306,9 +302,8 @@ async def change_close_status(message, av, status):
     data[event_name]["close"] = status
     if status : del_all_reactions(data[event_name]["emoji"])
 
+@authorised
 async def change_event_icon(message, av):
-    if not await is_authorised(message):
-        return False
     if len(av) < 2:
         await message.channel.send(MISSING_ARG, delete_after=60)
         return False
@@ -318,10 +313,9 @@ async def change_event_icon(message, av):
         return False
     data[event_name]["emoji"] = av[2]
 
-    
+
+@authorised
 async def change_event_description(message, av):
-    if not await is_authorised(message):
-        return False
     if len(av) < 2:
         await message.channel.send(MISSING_ARG, delete_after=60)
         return False
@@ -343,10 +337,8 @@ def get_member_id(message, txt):
         except:
             return None
 
-    
+@authorised    
 async def force_register(message, av):
-    if not await is_authorised(message):
-        return False
     if len(av) < 3:
         await message.channel.send(MISSING_ARG, delete_after=60)
         return False
@@ -368,9 +360,8 @@ async def force_register(message, av):
     await update_msg()
     await message.delete()
 
+@authorised
 async def force_unregister(message, av):
-    if not await is_authorised(message):
-        return False
     if len(av) < 3:
         await message.channel.send(MISSING_ARG, delete_after=60)
         return False
@@ -392,10 +383,8 @@ async def force_unregister(message, av):
     await update_msg()
     await message.delete()
     
-    
+@authorised    
 async def create(message, av):
-    if not await is_authorised(message):
-        return False
     if len(av) < 3:
         await message.channel.send(MISSING_ARG, delete_after=60)
         return False
@@ -416,9 +405,8 @@ async def create(message, av):
     await message.delete()
 
 
+@authorised
 async def delete(message, av):
-    if not await is_authorised(message):
-        return False
     if len(av) < 2:
         await message.channel.send(MISSING_ARG, delete_after=60)
         return False
@@ -447,6 +435,7 @@ async def update_msg():
                 ", ".join([MENTION(i) if str(i).isdigit() else i for i in dic["registed"]]))
     await msg.edit(content=txt)
 
+@authorised
 async def start_game(message, av):
     global start_msg
     await message.delete()
