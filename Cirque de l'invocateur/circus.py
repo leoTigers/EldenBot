@@ -173,9 +173,14 @@ async def is_authorised(message):
     await message.channel.send(FORBIDDEN, delete_after=10)
     return False
 
-async def do_register(channel, member, event_name):
+async def event_exist(channel, event_name):
     if event_name not in data.keys():
         await channel.send("L'évenement n'existe pas.", delete_after=60)
+        return False
+    return True
+
+async def do_register(channel, member, event_name):
+    if not await event_exist(channel, event_name)
         return False
     discord_id = member.id
     if discord_id in data[event_name]["registed"]:
@@ -191,8 +196,7 @@ async def do_register(channel, member, event_name):
     await update_msg()
 
 async def do_unregister(channel, member, event_name):
-    if event_name not in data.keys():
-        await channel.send("L'évenement n'existe pas.", delete_after=60)
+    if not await event_exist(channel, event_name)
         return False
     discord_id = member.id
     if discord_id not in data[event_name]["registed"]:
@@ -224,8 +228,7 @@ async def pre_register(message, av):
         return False
     name = av[1]
     event_name = av[2].lower()
-    if event_name not in data.keys():
-        await message.channel.send("L'évenement n'existe pas.", delete_after=60)
+    if not await event_exist(channel, event_name)
         return False
     if name in data[event_name]["registed"]:
         await message.channel.send("Le membre est déjà préinscrit", delete_after=60)
@@ -265,8 +268,7 @@ async def unpre_register(message, av):
         return False
     name = av[1]
     event_name = av[2].lower()
-    if event_name not in data.keys():
-        await message.channel.send("L'évenement n'existe pas.", delete_after=60)
+    if not await event_exist(channel, event_name)
         return False
     if name not in data[event_name]["registed"]:
         await message.channel.send("Le membre est déjà préinscrit", delete_after=60)
@@ -286,8 +288,7 @@ async def change_hidden_status(message, av, status):
         await message.channel.send(MISSING_ARG, delete_after=60)
         return False
     event_name = av[1].lower()
-    if event_name not in data.keys():
-        await message.channel.send("L'évenement n'existe pas.", delete_after=60)
+    if not await event_exist(channel, event_name)
         return False
     data[event_name]["hidden"] = status
     if status : del_all_reactions(data[event_name]["emoji"])
@@ -300,8 +301,7 @@ async def change_close_status(message, av, status):
         await message.channel.send(MISSING_ARG, delete_after=60)
         return False
     event_name = av[1].lower()
-    if event_name not in data.keys():
-        await message.channel.send("L'évenement n'existe pas.", delete_after=60)
+    if not await event_exist(channel, event_name)
         return False
     data[event_name]["close"] = status
     if status : del_all_reactions(data[event_name]["emoji"])
@@ -313,8 +313,7 @@ async def change_event_icon(message, av):
         await message.channel.send(MISSING_ARG, delete_after=60)
         return False
     event_name = av[1].lower()
-    if event_name not in data.keys():
-        await message.channel.send("L'évenement n'existe pas.", delete_after=60)
+    if not await event_exist(channel, event_name)
         return False
     data[event_name]["emoji"] = av[2]
 
@@ -326,8 +325,7 @@ async def change_event_description(message, av):
         await message.channel.send(MISSING_ARG, delete_after=60)
         return False
     event_name = av[1].lower()
-    if event_name not in data.keys():
-        await message.channel.send("L'évenement n'existe pas.", delete_after=60)
+    if not await event_exist(channel, event_name)
         return False
     data[event_name]["description"] = " ".join(av[2:])
     
@@ -355,8 +353,7 @@ async def force_register(message, av):
         await message.channel.send(NOT_FOUND, delete_after=60)
         return False
     event_name = av[2].lower()
-    if event_name not in data.keys():
-        await message.channel.send("L'évenement n'existe pas.", delete_after=60)
+    if not await event_exist(channel, event_name)
         return False
     if discord_id in data[event_name]["registed"]:
         await message.channel.send("Le membre est déjà inscrit", delete_after=60)
@@ -379,8 +376,7 @@ async def force_unregister(message, av):
         await message.channel.send(NOT_FOUND, delete_after=60)
         return False
     event_name = av[2].lower()
-    if event_name not in data.keys():
-        await message.channel.send("L'évenement n'existe pas.", delete_after=60)
+    if not await event_exist(channel, event_name)
         return False
     if discord_id not in data[event_name]["registed"]:
         await message.channel.send("Le membre est déjà désinscrit", delete_after=60)
@@ -423,8 +419,7 @@ async def delete(message, av):
         await message.channel.send(MISSING_ARG, delete_after=60)
         return False
     event_name = av[1].lower()
-    if event_name not in data.keys():
-        await message.channel.send("L'évenement n'existe pas.", delete_after=60)
+    if not await event_exist(channel, event_name)
         return False
     await del_all_reactions(data[event_name]["emoji"])
     del data[event_name]
