@@ -17,6 +17,7 @@ from money import balance
 from rgapi import afkmeter, kikimeter, getsummid, premade
 from link import link, send_to_linked
 from deleteallmessage import deleteallmessage
+from verif import verif, verif_all_forum
 #from verif_lol_account import verif
 
 
@@ -28,7 +29,7 @@ client = discord.Client()
 @client.event
 async def on_ready():
     print("Connected")
-    
+
 @client.event
 async def on_message(m):
     if m.content.startswith('/') :#and m.author == client.user:
@@ -58,6 +59,7 @@ async def command(m, member, cmd, args, force):
     elif cmd == "latex" : await latex(m, args)
     elif cmd == "bash" : await bash(m, member, args)
     elif cmd == "python" : await python(m, member, args)
+    elif cmd == "apython" : await python(m, member, args, asyncrone=True)
     elif cmd == "money" : await balance(m ,args, member)
     elif cmd == "getsummid" : await getsummid(m, args)
     elif cmd == "kikimeter" : await kikimeter(m, args, member)
@@ -65,17 +67,24 @@ async def command(m, member, cmd, args, force):
     elif cmd == "premade" : await premade(m, args, member)
     elif cmd == "deleteallmessage" : await deleteallmessage(client, m, member, force)
     elif cmd == "link" : await link(m, member, args)
+    elif cmd == "verif" : await verif(m, member, args)
+    elif cmd == "forumverif" : await verif_all_forum(m, member, args,
+                                                     guild=client.get_guild(367683573014069249))
 
 async def disphelp(message):
     with open("help", 'r') as fd:
         await message.channel.send(fd.read())
 
-async def python(m, member, args):
+async def python(m, member, args, asyncrone=False):
     if member.id != 384274248799223818:
         await(forbidden(m))
     else:
-        await m.channel.send(eval(" ".join(args)))
-    
+        if asyncrone:
+            rt = await eval(" ".join(args))
+        else:
+            rt = eval(" ".join(args))
+        await m.channel.send(rt)
+
 async def bash(m, member, args):
     if member.id != 384274248799223818:
         await(forbidden(m))
