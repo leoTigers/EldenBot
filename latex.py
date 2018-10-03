@@ -20,7 +20,8 @@ def get_formula(formula):
     img.putdata(newData)
     img.save("formula.png", "PNG")
 
-async def latex(message, args):
-    args = "".join(args)
-    get_formula(args)
-    await message.channel.send(".", file=discord.File("formula.png", filename="formula.png"))
+class CmdLatex:
+    async def cmd_latex(self, message, args, *_):
+        args = "".join(args)
+        get_formula(args)
+        await message.channel.send(".", file=discord.File("formula.png", filename="formula.png"))
