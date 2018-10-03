@@ -6,16 +6,16 @@ SERV_FORBIDEN = "Impossible de lancer cette commande sur ce serveur"
 
 
 def not_offical_serv(func):
-    async def wrapper(message, *args, **kwargs):
+    async def wrapper(self, message, args, member, force, *args_, **kwargs):
         guild_id = message.guild.id
-        if guild.id not in OFFICIAL_SERVS:
+        if force or guild.id not in OFFICIAL_SERVS:
             await func(message, *args, **kwargs)
         else:
             await message.channel.send(SERV_FORBIDEN)
     return wrapper
 
 def only_owner(func):
-    async def wrapper(message, *args, **kwargs):
+    async def wrapper(self, message, *args, **kwargs):
         if message.author.id != OWNER_ID:
             await func(message, *args, **kwargs)
         else:
