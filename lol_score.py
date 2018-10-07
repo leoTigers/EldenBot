@@ -1,4 +1,6 @@
+
 import discord
+import json
 import asyncio
 from pantheon import pantheon
 from decorator import only_owner
@@ -49,7 +51,7 @@ class CmdLolScore:
     async def cmd_refreshallscore(self, message, *_):
         msg = await message.channel.send("Calcul des scores")
         verif = load_verif()
-        dic = {i:get_ranked_score(i) for i in verif.values()}
+        dic = {i:await get_ranked_score(i) for i in verif.values()}
         save_score(dic)
         msg.edit("{} scores ont été mis à jour".format(dic))
 
