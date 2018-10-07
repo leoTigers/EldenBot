@@ -1,3 +1,4 @@
+import json
 import asyncio
 from pantheon import pantheon
 from decorator import only_owner
@@ -24,8 +25,8 @@ def save_score(dic):
 async def get_ranked_score(summoner_id):
     print("getting score for : {}".format(summoner_id))
     data = await panth.getLeaguePosition(summoner_id)
-    pos = {QUEUE(i["queueType"]): LEAGUE_SCORE(i['tier']) + DIV_SCORE(i['rank'])
-            + i['leaguePoints'] for i in data}
+    pos = {QUEUE[i["queueType"]]:(LEAGUE_SCORE[i['tier']] + DIV_SCORE[i['rank']]
+                                  + i['leaguePoints']) for i in data}
     return pos
 
 class CmdLolScore:
@@ -33,6 +34,6 @@ class CmdLolScore:
     async def cmd_refreshallscore(self, message, *_):
         msg = await message.channel.send("Calcul des scores")
         verif = load_verif()
-        dic = {i:get_ranked_score(i) for i in verif.values()}
+        dic = {i:await get_ranked_score(i) for i in verif.values()}
         save_score(dic)
-        msg.edit("{} scores ont été mis à jour".format(dic))
+        msg.edit(content="{} scores ont été mis à jour".format(dic))
