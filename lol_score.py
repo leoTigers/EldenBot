@@ -43,7 +43,7 @@ async def get_ranked_score(summoner_id):
     data = await panth.getLeaguePosition(summoner_id)
     pos = {QUEUE[i["queueType"]]:
             (LEAGUE_SCORE[i['tier']] + DIV_SCORE[i['rank']] + i['leaguePoints'],
-             "{tier} {rank} {leaguePoints} LP".format(**i) for i in data}
+             "{tier} {rank} {leaguePoints} LP".format(**i)) for i in data}
     return pos
 
 class CmdLolScore:
