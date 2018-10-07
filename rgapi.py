@@ -14,6 +14,22 @@ def get_player_id(pi, accid):
             return i["participantId"]
     return None
 
+async def get_bonus(summonerId, win, totalMatches):
+    bonus = {}
+    winrate = round((win / totalMatches) * 100)
+    mastery = await panth.getChampionMasteries(summonerId)
+    mastery7 = [i["championId"] for i in mastery if i["championLevel"] == 7]
+    if winrate >= 60 : bonus["High Winrate ({}%)".format(str(winrate))] = 1
+    if winrate <= 40 : bonus["Low Winrate ({}%)".format(str(winrate))] = -1
+    if 157 in mastery7 : bonus["Yasuo masteries 7"]  = 1
+    if 40  in mastery7 : bonus["Janna masteries 7"]  = -0.5
+    if 16  in mastery7 : bonus["Soraka masteries 7"] = -0.5
+    if 267 in mastery7 : bonus["Nami masteries 7"] = -0.5
+    if 117 in mastery7 : bonus["Lulu masteries 7"] = -0.5
+    return (bonus)
+
+
+
 async def getLeagueSoloQ(summonerId):
     data = await panth.getLeaguePosition(summonerId)
     for league in data:
@@ -97,20 +113,6 @@ class CmdRgapi:
             str(summonerId),str(accountId)
         ))
 
-
-    async def get_bonus(self, summonerId, win, totalMatches):
-        bonus = {}
-        winrate = round((win / totalMatches) * 100)
-        mastery = await panth.getChampionMasteries(summonerId)
-        mastery7 = [i["championId"] for i in mastery if i["championLevel"] == 7]
-        if winrate >= 60 : bonus["High Winrate ({}%)".format(str(winrate))] = 1
-        if winrate <= 40 : bonus["Low Winrate ({}%)".format(str(winrate))] = -1
-        if 157 in mastery7 : bonus["Yasuo masteries 7"]  = 1
-        if 40  in mastery7 : bonus["Janna masteries 7"]  = -0.5
-        if 16  in mastery7 : bonus["Soraka masteries 7"] = -0.5
-        if 267 in mastery7 : bonus["Nami masteries 7"] = -0.5
-        if 117 in mastery7 : bonus["Lulu masteries 7"] = -0.5
-        return (bonus)
 
     @not_offical_serv
     async def cmd_kikimeter(self, m, args, member, *_):
