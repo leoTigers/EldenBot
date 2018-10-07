@@ -22,6 +22,7 @@ def save_score(dic):
         fd.write(json.dumps(dic))
 
 async def get_ranked_score(summoner_id):
+    print("getting score for : {}".format(summoner_id))
     data = await panth.getLeaguePosition(summoner_id)
     pos = {QUEUE(i["queueType"]): LEAGUE_SCORE(i['tier']) + DIV_SCORE(i['rank'])
             + i['leaguePoints'] for i in data}
@@ -29,7 +30,9 @@ async def get_ranked_score(summoner_id):
 
 class CmdLolScore:
     @only_owner
-    async def cmd_refreshallscore(self, message):
+    async def cmd_refreshallscore(self, message, *_):
+        msg = await message.channel.send("Calcul des scores")
         verif = load_verif()
         dic = {i:get_ranked_score(i) for i in verif.values()}
         save_score(dic)
+        msg.edit("{} scores ont été mis à jour".format(dic))
