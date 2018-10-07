@@ -19,9 +19,10 @@ if __name__ == '__main__':
     from link import CmdLink, send_to_linked
     from deleteallmessage import CmdDeleteAllMessage
     from verif import CmdVerif
+    from lol_score import CmdLolScore
 
-    class Command(CmdRoll, CmdLatex, CmdRgapi,
-                  CmdLink, CmdDeleteAllMessage, CmdVerif):
+    class Command(CmdRoll, CmdLatex, CmdRgapi, CmdLink, CmdDeleteAllMessage,
+                  CmdVerif, CmdLolScore):
         async def cmd_help(self, message, *_):
             with open("help", 'r') as fd:
                 await message.channel.send(fd.read())
@@ -72,26 +73,6 @@ async def on_message(m):
     if client.user in m.mentions and m.author != client.user:
         await random_message(client, m)
     await send_to_linked(client, m)
-
-#
-# async def command(m, member, cmd, args, force):
-#     if cmd == "help" : await disphelp(m)
-#     elif cmd == "r" or cmd == "roll" : await roll(m, args)
-#     elif cmd == "rb" or cmd == "br": await bloodlust_roll(m, args)
-#     elif cmd == "latex" : await latex(m, args)
-#     elif cmd == "bash" : await bash(m, member, args)
-#     elif cmd == "python" : await python(m, member, args)
-#     elif cmd == "apython" : await python(m, member, args, asyncrone=True)
-#     elif cmd == "money" : await balance(m ,args, member)
-#     elif cmd == "getsummid" : await getsummid(m, args)
-#     elif cmd == "kikimeter" : await kikimeter(m, args, member)
-#     elif cmd == "afkmeter" : await afkmeter(m, args, member)
-#     elif cmd == "premade" : await premade(m, args, member)
-#     elif cmd == "deleteallmessage" : await deleteallmessage(client, m, member, force)
-#     elif cmd == "link" : await link(m, member, args)
-#     elif cmd == "verif" : await verif(m, member, args)
-#     elif cmd == "forumverif" : await verif_all_forum(m, member, args,
-#                                                      guild=client.get_guild(367683573014069249))
 
 
 if __name__ == '__main__':

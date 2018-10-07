@@ -75,7 +75,6 @@ async def getSeasonMatches(accountId, timeline=False):
         return (allMatches, allTimeline)
     return await asyncio.gather(*tasks)
 
-
 class CmdRgapi:
     async def cmd_premade(self, message, args, member, *_):
         if not args : summonerName = member.name
