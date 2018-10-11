@@ -1,4 +1,3 @@
-
 import discord
 import json
 import asyncio
@@ -25,25 +24,30 @@ def save_score(dic):
         fd.write(json.dumps(dic))
 
 async def get_leaderboard(message, summ_id, rank):
+    summ_id = str(summ_id)
     scores = load_score()
-    if str(summ_id) not in scores.keys():
+    if summ_id not in scores.keys():
+        return None
+    if rank not in scores[summ_id].keys():
         return None
     verif = load_verif()
     guild = message.guild
     if not guild:
         await message.channel.send("Impoissble de récupérer le classement du serveur")
         return None
-    guildv = [verif[member.id] for member in guild.members if member.id in verif.keys()]
-    l = [(player, score[player][0][rank]) for player, score in scores if player in guildv]
-    l = sorted(l, key=lambda x: x[1])
-    return (l.index(summ_id), len(l))
+    guildv = [str(verif[str(member.id)]) for member in guild.members if str(member.id) in verif.keys()]
+    l = [(player, score[rank][0]) for player, score in scores.items()
+            if player in guildv and rank in score.keys()]
+    l = sorted(l, key=lambda x: x[1])[::-1]
+    return ([i[0] for i in l].index(summ_id) + 1, len(l))
 
 async def get_ranked_score(summoner_id):
     print("getting score for : {}".format(summoner_id))
-    data = await panth.getLeaguePosition(summoner_id)
+    data = await panth.getLeaguePosition(summoner_id)    
     pos = {QUEUE[i["queueType"]]:
             (LEAGUE_SCORE[i['tier']] + DIV_SCORE[i['rank']] + i['leaguePoints'],
-             "{tier} {rank} {leaguePoints} LP".format(**i)) for i in data}
+             "{:>8} {rank:<3} {leaguePoints:^3}LP".format(i['tier'].capitalize(), **i))
+           for i in data}
     return pos
 
 class CmdLolScore:
@@ -53,38 +57,38 @@ class CmdLolScore:
         verif = load_verif()
         dic = {i:await get_ranked_score(i) for i in verif.values()}
         save_score(dic)
-        msg.edit("{} scores ont été mis à jour".format(dic))
+        await msg.edit(content="{} scores ont été mis à jour".format(len(dic)))
 
     async def cmd_info(self, message, args, member, *_):
         summ_id, name = None, None
         if not args:
             verif = load_verif()
             if member.id in verif:
-                summ_id = verif[member.id]
+                summ_id = verif[str(member.id)]
             else:
                 name = member.display_name
         else:
             name = " ".join(args)
         if summ_id:
-            data = getSummoner(summ_id)
+            data = await panth.getSummoner(summ_id)
         else:
-            data = getSummonerByName(name)
+            data = await panth.getSummonerByName(name)
         if not data:
             await message.channel.send("Impossible de trouver l'invocateur")
             return None
         icon = "http://ddragon.canisback.com/latest/img/profileicon/"+str(data['profileIconId'])+".png"
         score = load_score()
-        txt = "```"
+        txt = ""
         for i in ["SoloQ", "FlexQ", "3v3TT"]:
-            lead = get_leaderboard(data['id']
+            lead = await get_leaderboard(message, data['id'], i)
             if lead:
-                txt += "{}: {:<12} {}/{}".format(i, score[summ_id][1], *lead))
+                txt += "``{}: {} {:>2}/{}``\n".format(i, score[str(data['id'])][i][1], *lead)
         colour = 0xDDDDDD
         if summ_id:
             colour = member.colour
         elif message.guild:
             target = message.guild.get_member_named(name)
-            if taget : colour = target.colour
-        em = discord.Embed(title="Information de l'invocateur", description=txt + "```", colour=member.colour)
+            if target : colour = target.colour
+        em = discord.Embed(title="Information de l'invocateur", description=txt + "", colour=member.colour)
         em.set_author(name=data['name'], icon_url=icon)
         await message.channel.send(embed=em)
