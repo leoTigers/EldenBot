@@ -20,9 +20,10 @@ if __name__ == '__main__':
     from deleteallmessage import CmdDeleteAllMessage
     from verif import CmdVerif
     from lol_score import CmdLolScore
+    from music import CmdMusic
 
     class Command(CmdRoll, CmdLatex, CmdRgapi, CmdLink, CmdDeleteAllMessage,
-                  CmdVerif, CmdLolScore):
+                  CmdVerif, CmdLolScore, CmdMusic):
         async def cmd_help(self, message, *_):
             with open("help", 'r') as fd:
                 await message.channel.send(fd.read())
