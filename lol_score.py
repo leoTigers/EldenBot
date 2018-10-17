@@ -23,7 +23,20 @@ def save_score(dic):
     with open("data/rank_score", 'w') as fd:
         fd.write(json.dumps(dic))
 
-async def get_leaderboard(message, summ_id, rank):
+async def get_leader(message, rank):
+    scores = load_score()
+    verif = load_verif()
+    guild = message.guild
+    if not guild:
+        await message.channel.send("Impoissble de récupérer le classement du serveur")
+        return None
+    guildv = [str(verif[str(member.id)]) for member in guild.members if str(member.id) in verif.keys()]
+    l = [(player, score[rank]) for player, score in scores.items()
+            if player in guildv and rank in score.keys()]
+    l = sorted(l, key=lambda x: x[1][0])[::-1]
+    return l
+
+async def get_leaderboard_place(message, summ_id, rank):
     summ_id = str(summ_id)
     scores = load_score()
     if summ_id not in scores.keys():
@@ -43,7 +56,7 @@ async def get_leaderboard(message, summ_id, rank):
 
 async def get_ranked_score(summoner_id):
     print("getting score for : {}".format(summoner_id))
-    data = await panth.getLeaguePosition(summoner_id)    
+    data = await panth.getLeaguePosition(summoner_id)
     pos = {QUEUE[i["queueType"]]:
             (LEAGUE_SCORE[i['tier']] + DIV_SCORE[i['rank']] + i['leaguePoints'],
              "{:>8} {rank:<3} {leaguePoints:^3}LP".format(i['tier'].capitalize(), **i))
@@ -58,6 +71,18 @@ class CmdLolScore:
         dic = {i:await get_ranked_score(i) for i in verif.values()}
         save_score(dic)
         await msg.edit(content="{} scores ont été mis à jour".format(len(dic)))
+
+    async def cmd_ladder(self, message, args, *_):
+        if not args or args[0] not in ['SoloQ', 'FlexQ', '3v3TT']:
+            await message.channel.send("Préciser la queue [SoloQ/FlexQ/3v3TT]")
+            return
+        lst = await get_leader(message, args[0])
+        lst = lst[:20]
+        tasks = [panth.getSummoner(summ_id) for summ_id in [i[0] for i in lst]]
+        summ_name = [i['name'] for i in await asyncio.gather(*tasks)]
+        txt = "```{}```".format('\n'.join(["{:>2}.{:>15} {}".format(i+1, summ_name[i], j[1][1])
+                                for i,j in enumerate(lst)]))
+        await message.channel.send(txt)
 
     async def cmd_info(self, message, args, member, *_):
         summ_id, name = None, None
@@ -80,7 +105,7 @@ class CmdLolScore:
         score = load_score()
         txt = ""
         for i in ["SoloQ", "FlexQ", "3v3TT"]:
-            lead = await get_leaderboard(message, data['id'], i)
+            lead = await get_leaderboard_place(message, data['id'], i)
             if lead:
                 txt += "``{}: {} {:>2}/{}``\n".format(i, score[str(data['id'])][i][1], *lead)
         colour = 0xDDDDDD
