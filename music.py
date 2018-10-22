@@ -1,5 +1,4 @@
 import discord
-import ctypes
 import youtube_dl
 
 
