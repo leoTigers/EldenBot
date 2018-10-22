@@ -1,9 +1,24 @@
 import discord
 import ctypes
-from pytube import YouTube
+import youtube_dl
 
 
-
+def download(title, video_url):
+    ydl_opts = {
+        'outtmpl': '{}.%(ext)s'.format(title),
+        'format': 'bestaudio/best',
+        'postprocessors': [{
+            'key': 'FFmpegExtractAudio',
+            'preferredcodec': 'mp3',
+            'preferredquality': '96',
+        }],
+    }
+    with youtube_dl.YoutubeDL(ydl_opts) as ydl:
+        ydl.download([video_url])
+    return {
+        'audio': open('{}.mp3'.format(title), 'rb'),
+        'title': title,
+    }
 
 def get_client_channel(guild, target_member):
     channels = guild.voice_channels
@@ -14,21 +29,35 @@ def get_client_channel(guild, target_member):
 
 class CmdMusic:
     def __init__(self):
-        self.opus_lib = discord.opus.load_opus(ctypes.util.find_library('opus'))
         self.voice = None
         self.queue = []
+
+    def play_next_music(self, *_):
+        if not self.queue:
+            return self.disconnect
+        music = self.queue[0]
+        del self.queue[0]
+        audio_source = discord.FFmpegPCMAudio(music + ".mp3")
+        self.voice.play(audio_source, after=self.play_next_music)
+
+    async def disconnect(self):
+        self.voice.stop()
+        await self.voice.disconnect()
+        self.voice = None
+        self.queue = []
+
     async def cmd_music(self, message, args, member, *_):
         if not args:
             await message.channel.send("Aucun argument reçu.")
             return
+
         if args[0] == "disconnect":
             if self.voice:
-                self.voice.stop()
-                await self.voice.disconnect()
+                await self.disconnect()
                 await message.channel.send("Client déconnecté")
-                self.voice = None
             else:
                 await message.channel.send("Le client est déjà déconnecté")
+
         elif args[0] == "pause":
             if not self.voice:
                 await message.channel.send("le client n'est pas connecté")
@@ -39,6 +68,7 @@ class CmdMusic:
             else:
                 self.voice.pause()
                 await message.channel.send("mise en pause ...")
+
         elif args[0] == "resume":
             if not self.voice:
                 await message.channel.send("le client n'est pas connecté")
@@ -50,6 +80,16 @@ class CmdMusic:
             if not self.voice or not self.voice.is_connected():
                 channel = get_client_channel(message.guild, member)
                 self.voice = await channel.connect()
-            music = YouTube(args[0]).streams.filter(only_audio=True).first()
-            audio_source = discord.PCMAudio(music)
-            self.voice.play(audio_source)
+            # add to the queue
+            with youtube_dl.YoutubeDL({}) as ydl:
+                info = ydl.extract_info(args[0], download=False)
+            em = discord.Embed(title="Ajouté à la queue",
+                               description=info['title'],
+                               colour=0xCC0000)
+            print(info['thumbnail'])
+            em.set_author(name=member.name, icon_url=member.avatar_url)
+            em.set_image(url=info['thumbnail'])
+            await message.channel.send(embed=em)
+            self.queue.append(download(info['title'], args[0])['title'])
+            if not self.voice.is_playing() and not self.voice.is_paused():
+                self.play_next_music()

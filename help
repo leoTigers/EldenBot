@@ -9,7 +9,7 @@
 
 **/afkmeter** {nom d'invocateur} : Affiche le nombre d'AFK de l'invocateur sur les 100 dernières games.
 **/kikimeter** {nom d'invocateur} : Permet de savoir .... bref le nom de la commande quoi.
-**/premarde** {nom d'invocateur} : Affiche le nombre de partie jouer avec chaque joueurs
+**/premade** {nom d'invocateur} : Affiche le nombre de partie jouer avec chaque joueurs
 **/getsummid** {nom d'invocateur} : Donne le summonerId et l'accountId de l'invocateur
 **/info** {nom d'invocateur} : Affiche le rank de l'invocateur et son classement sur le serveur.
 
