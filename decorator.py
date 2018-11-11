@@ -21,3 +21,15 @@ def only_owner(func):
         else:
             await message.channel.send(forbidden(message, who="only_owner"))
     return wrapper
+
+def can_manage_message(func):
+    async def wrapper(self, message, args, member, force, *args_, **kwargs):
+        if not message.guild:
+            await message.channel.send("la commande doit être utilisé sur un serveur.")
+            return
+        perms = member.permissions_in(message.channel)
+        if perms.manage_messages:
+            await func(self, message, args, member, force, *args_, **kwargs)
+        else:
+            pass
+    return wrapper
