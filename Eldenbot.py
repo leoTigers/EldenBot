@@ -9,20 +9,41 @@ import traceback
 import shlex
 import subprocess
 
-from function import *
-from roll import roll,bloodlust_roll
-from random_message import *
-from latex import latex
-from money import balance
-from rgapi import afkmeter, kikimeter, getsummid, premade
-from link import link, send_to_linked
-from deleteallmessage import deleteallmessage
-from verif import verif, verif_all_forum
-#from verif_lol_account import verif
+if __name__ == '__main__':
+    from function import *
+    from random_message import *
+    from roll import CmdRoll
+    from latex import CmdLatex
+    #from money import balance
+    from rgapi import CmdRgapi
+    from link import CmdLink, send_to_linked
+    from deleteallmessage import CmdDeleteAllMessage
+    from verif import CmdVerif
+    from lol_score import CmdLolScore
+    from music import CmdMusic
+    from moderation_tools import CmdModeration
 
+    class Command(CmdRoll, CmdLatex, CmdRgapi, CmdLink, CmdDeleteAllMessage,
+                  CmdVerif, CmdLolScore, CmdMusic, CmdModeration):
+        async def cmd_help(self, message, *_):
+            with open("help", 'r') as fd:
+                await message.channel.send(fd.read())
+        async def python(self, m, args, member, *_, asyncrone=False):
+            if member.id != 384274248799223818:
+                await(forbidden(m))
+            else:
+                if asyncrone:
+                    rt = await eval(" ".join(args))
+                else:
+                    rt = eval(" ".join(args))
+                await m.channel.send(rt)
+        async def cmd_python(self, *args) : await self.python(*args, asyncrone=False)
+        async def cmd_apyhton(self, *args) : await self.python(*args, asyncrone=True)
+    command = Command()
 
 logging.basicConfig(level=logging.INFO)
 client = discord.Client()
+
 #wb = gspread.authorize("token_google").open_by_key('1v-MzfsOmmCQNwWFHl86UVrf3lIm5QPitRiJeA4ISIPw')
 #wb = wb.get_worksheet(0)
 
@@ -41,7 +62,11 @@ async def on_message(m):
             args = m.content.split(" ")[2:]
         else: args = m.content.split(" ")[1:]
         try:
-            await command(m, member, cmd, args, force)
+            function = getattr(command, "cmd_" + cmd)
+        except:
+            return
+        try:
+            await function(m, args, member, force, client)
         except Exception:
             em = discord.Embed(title="Oh no !  😱",
                                description="Une erreur s'est produite lors de l'éxécution de la commande\n" + msg("- [FATAL ERROR]\n" + traceback.format_exc()),
@@ -52,47 +77,7 @@ async def on_message(m):
     await send_to_linked(client, m)
 
 
-async def command(m, member, cmd, args, force):
-    if cmd == "help" : await disphelp(m)
-    elif cmd == "r" or cmd == "roll" : await roll(m, args)
-    elif cmd == "rb" or cmd == "br": await bloodlust_roll(m, args)
-    elif cmd == "latex" : await latex(m, args)
-    elif cmd == "bash" : await bash(m, member, args)
-    elif cmd == "python" : await python(m, member, args)
-    elif cmd == "apython" : await python(m, member, args, asyncrone=True)
-    elif cmd == "money" : await balance(m ,args, member)
-    elif cmd == "getsummid" : await getsummid(m, args)
-    elif cmd == "kikimeter" : await kikimeter(m, args, member)
-    elif cmd == "afkmeter" : await afkmeter(m, args, member)
-    elif cmd == "premade" : await premade(m, args, member)
-    elif cmd == "deleteallmessage" : await deleteallmessage(client, m, member, force)
-    elif cmd == "link" : await link(m, member, args)
-    elif cmd == "verif" : await verif(m, member, args)
-    elif cmd == "forumverif" : await verif_all_forum(m, member, args,
-                                                     guild=client.get_guild(367683573014069249))
-
-async def disphelp(message):
-    with open("help", 'r') as fd:
-        await message.channel.send(fd.read())
-
-async def python(m, member, args, asyncrone=False):
-    if member.id != 384274248799223818:
-        await(forbidden(m))
-    else:
-        if asyncrone:
-            rt = await eval(" ".join(args))
-        else:
-            rt = eval(" ".join(args))
-        await m.channel.send(rt)
-
-async def bash(m, member, args):
-    if member.id != 384274248799223818:
-        await(forbidden(m))
-    else:
-        rt = subprocess.run(shlex.split(" ".join(args)),timeout=10, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
-        await m.channel.send(msg(rt.stdout.decode("utf-8")))
-
-
-fd = open("private/token")
-client.run(json.load(fd))
-fd.close()
+if __name__ == '__main__':
+    fd = open("private/token")
+    client.run(json.load(fd))
+    fd.close()

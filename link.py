@@ -9,7 +9,7 @@ def load_link_file():
     except:
         print("IMPOSSBILE DE LOAD LE FICHIER private/link.data !")
         return ({})
-    
+
 def save_link_file(data):
     with open("private/link.data", 'w') as fd:
         fd.write(json.dumps(data))
@@ -21,13 +21,13 @@ async def show(message):
     for c, l in linked.items():
         if l: txt += "<#{}> -> {}\n".format(c, ", ".join(["<#{}>".format(i) for i in l]))
     await message.channel.send(txt)
-    
+
 async def add(message, args):
     channel_id = int(args[1])
     if channel_id not in linked.keys():
         linked[str(channel_id)] = []
     linked[str(channel_id)].append(message.channel.id)
-    if len(args) <= 2 or args[2] != "uni": 
+    if len(args) <= 2 or args[2] != "uni":
         if message.channel.id not in linked.keys():
             linked[str(message.channel.id)] = []
         linked[str(message.channel.id)].append(channel_id)
@@ -62,13 +62,6 @@ async def delete(message, args):
         await message.channel.send("")
     save_link_file(linked)
 
-async def link(message, member, args):
-    if member.id != 384274248799223818:
-        await(forbidden(message))
-    else:
-        if args[0] == "show"  : await show(message)
-        if args[0] == "add"   : await add(message, args)
-        if args[0] == "delete": await delete(message, args)
 
 async def send_to_linked(client, message):
     if str(message.channel.id) in linked.keys() and message.author != client.user:
@@ -91,3 +84,12 @@ async def send_to_linked(client, message):
         for channel in linked[str(message.channel.id)]:
             try: await client.get_channel(channel).send(None,embed=em,)
             except : pass
+
+class CmdLink:
+    async def cmd_link(self, message, args, member, *_):
+        if member.id != 384274248799223818:
+            await(forbidden(message))
+        else:
+            if args[0] == "show"  : await show(message)
+            if args[0] == "add"   : await add(message, args)
+            if args[0] == "delete": await delete(message, args)
