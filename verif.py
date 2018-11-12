@@ -75,4 +75,4 @@ class CmdVerif:
                 return False
             verified[str(member.id)] = summ_data['id']
             save_verif(verified)
-            await verif(message, member, None)
+            await self.cmd_verif(message, None, member)

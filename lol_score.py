@@ -4,9 +4,9 @@ import asyncio
 from pantheon import pantheon
 from decorator import only_owner
 
-LEAGUE_SCORE = {"BRONZE":0, "SILVER":500, "GOLD":1000, "PLATINUM":1500,
-                "DIAMOND":2000, "MASTER":2500, "CHALLENGER":2500}
-DIV_SCORE = {"V":0,"IV":100,"III":200,"II":300,"I":400}
+LEAGUE_SCORE = {"BRONZE":0, "SILVER":600, "GOLD":1200, "PLATINUM":1800,
+                "DIAMOND":2400, "MASTER":2800, "CHALLENGER":2800}
+DIV_SCORE = {"V":0,"IV":110,"III":220,"II":330,"I":440}
 QUEUE = {"RANKED_FLEX_SR":"FlexQ", "RANKED_SOLO_5x5":"SoloQ", "RANKED_FLEX_TT":"3v3TT"}
 with open("private/rgapikey") as key:
     panth = pantheon.Pantheon("euw1", key.read(), True)
