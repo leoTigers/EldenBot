@@ -1,6 +1,6 @@
 import discord
 import youtube_dl
-
+import os
 
 def download(title, video_url):
     ydl_opts = {
@@ -15,7 +15,7 @@ def download(title, video_url):
     with youtube_dl.YoutubeDL(ydl_opts) as ydl:
         ydl.download([video_url])
     return {
-        'audio': open('{}.mp3'.format(title), 'rb'),
+        'audio': open('musicqueue/{}.mp3'.format(title), 'rb'),
         'title': title,
     }
 
@@ -36,14 +36,21 @@ class CmdMusic:
             return self.disconnect
         music = self.queue[0]
         del self.queue[0]
-        audio_source = discord.FFmpegPCMAudio(music + ".mp3")
+        audio_source = discord.FFmpegPCMAudio("musicqueue/" + music + ".mp3")
         self.voice.play(audio_source, after=self.play_next_music)
+        self.delete_file
 
     async def disconnect(self):
         self.voice.stop()
         await self.voice.disconnect()
         self.voice = None
         self.queue = []
+        self.delete_file
+
+    def delete_file(self):
+        for file in os.listdir("musicqueue"):
+            if file not in self.queue:
+                os.remove("musiquequeue/" + file)
 
     async def cmd_music(self, message, args, member, *_):
         if not args:
