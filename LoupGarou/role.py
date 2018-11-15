@@ -1,8 +1,8 @@
 class Role:
     def __init__(self):
-        self.name = self.__str__(self)
+        self.name = self.__str__()
     def __eq__(self, other):
-        return str(self) == str(other)
+        return str(other) in [str(self), self.__class__.__name__]
 
 class Werewolf(Role):
     def __str__(self):
