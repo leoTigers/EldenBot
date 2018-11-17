@@ -1,4 +1,5 @@
 import discord
+from decorator import can_manage_message
 
 MOD_DELETED = ("Votre message a été supprimé par {} pour la raison suivante :"
                + "\n{}\nRappel du message :\n{}")

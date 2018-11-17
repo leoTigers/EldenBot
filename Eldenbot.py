@@ -22,9 +22,10 @@ if __name__ == '__main__':
     from lol_score import CmdLolScore
     from music import CmdMusic
     from moderation_tools import CmdModeration
+    from LoupGarou.lg import CmdLg
 
     class Command(CmdRoll, CmdLatex, CmdRgapi, CmdLink, CmdDeleteAllMessage,
-                  CmdVerif, CmdLolScore, CmdMusic, CmdModeration):
+                  CmdVerif, CmdLolScore, CmdMusic, CmdModeration, CmdLg):
         async def cmd_help(self, message, *_):
             with open("help", 'r') as fd:
                 await message.channel.send(fd.read())
