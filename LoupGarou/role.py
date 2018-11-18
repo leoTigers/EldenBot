@@ -1,6 +1,11 @@
+from LoupGarou.announce import load_images
+
+images = load_images()
+
 class Role:
     def __init__(self):
         self.name = self.__str__()
+        self.image = random.choice(images[str(self)])
     def __eq__(self, other):
         return str(other) in [str(self), self.__class__.__name__]
 
