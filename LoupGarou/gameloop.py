@@ -1,5 +1,3 @@
-
-
 async def game_loop(game):
     await cupidon(game)
     while not await game_ended(game):

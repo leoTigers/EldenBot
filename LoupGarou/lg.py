@@ -10,11 +10,11 @@ class CmdLg:
             await lg_start(message, args[1:], member, client)
 
 async def lg_start(message, argv, mj, client):
-    game = Game(mj, message.channel)
+    game = Game(mj, message.channel, client)
     #create players list
     players_list = await create_plist(message, mj, client)
     #option
-    await game.channel.send("```diff\noption:\n{}```".format(
+    await game.channel.send("```option:\ndiff\n{}```".format(
                                 "\n".join("{} {} : {}".format('+' if i else '-', i, j)
                                 for i, j in game.option.items())))
     #role distribution
@@ -35,7 +35,8 @@ async def distrib_role(players_list, game):
         players.append(new_player)
         del role_list[role_index], players_list[player_index]
         await game.announce("announce_" + str(new_player.role),
-                            author=new_player.member, mp=True)
+                            author=new_player.member, mp=True,
+                            image=new_player.role.image)
     return players
 
 async def create_plist(message, mj, client):
