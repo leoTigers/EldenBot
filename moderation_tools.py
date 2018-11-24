@@ -33,6 +33,8 @@ class CmdModeration:
         em = discord.Embed(description=msg.content, timestamp=msg.created_at)
         em.set_footer(text="message déplacé par la modération")
         em.set_author(icon_url=msg.author.avatar_url, name=msg.author.name)
+        if msg.attachments:
+            em.set_image(url=msg.attachments[0].url)
         await target.send(embed=em)
         await msg.delete()
         await message.delete()
