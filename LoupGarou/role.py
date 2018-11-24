@@ -1,6 +1,6 @@
-from LoupGarou.announce import load_images
-
-images = load_images()
+# from LoupGarou.announce import load_images
+#
+# images = load_images()
 
 class Role:
     def __init__(self):
