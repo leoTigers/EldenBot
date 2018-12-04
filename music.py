@@ -103,7 +103,7 @@ class MusicClient:
             await self.play_next_music()
 
     async def disconnect(self):
-        self.voice_client.disconnect()
+        await self.voice_client.disconnect()
         global clients
         del clients[self.voice_client.guild]
 
