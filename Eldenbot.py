@@ -75,6 +75,9 @@ async def on_message(m):
     if client.user in m.mentions and m.author != client.user:
         await random_message(client, m)
     await send_to_linked(client, m)
+    # TODO faire un vrai truc pour ces mecs
+    if m.channel.id == 437540382683955221:
+        await m.author.add_roles(*[r for r in m.guild.roles if r.id == 378878258671910932])
 
 
 if __name__ == '__main__':
