@@ -105,7 +105,7 @@ class MusicClient:
     async def disconnect(self):
         await self.voice_client.disconnect()
         global clients
-        del clients[self.voice_client.guild]
+        del clients[self.voice_client.guild.id]
 
 class CmdMusic:
     async def cmd_music(self, message, args, member, force, client, *_):
