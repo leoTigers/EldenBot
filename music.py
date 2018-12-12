@@ -1,101 +1,138 @@
 import discord
 import youtube_dl
 import os
-
-def download(title, video_url):
-    ydl_opts = {
-        'outtmpl': '{}.%(ext)s'.format(title),
-        'format': 'bestaudio/best',
-        'postprocessors': [{
-            'key': 'FFmpegExtractAudio',
-            'preferredcodec': 'mp3',
-            'preferredquality': '96',
-        }],
-    }
-    with youtube_dl.YoutubeDL(ydl_opts) as ydl:
-        ydl.download([video_url])
-    return {
-        'audio': open('musicqueue/{}.mp3'.format(title), 'rb'),
-        'title': title,
-    }
-
-def get_client_channel(guild, target_member):
-    channels = guild.voice_channels
-    for channel in channels:
-        if target_member in channel.members:
-            return channel
+import asyncio
 
 
-class CmdMusic:
+# Suppress noise about console usage from errors
+youtube_dl.utils.bug_reports_message = lambda: ''
+
+
+ytdl_format_options = {
+    'format': 'bestaudio/best',
+    'outtmpl': '%(extractor)s-%(id)s-%(title)s.%(ext)s',
+    'restrictfilenames': True,
+    'noplaylist': True,
+    'nocheckcertificate': True,
+    'ignoreerrors': False,
+    'logtostderr': False,
+    'quiet': True,
+    'no_warnings': True,
+    'default_search': 'auto',
+    'source_address': '0.0.0.0' # bind to ipv4 since ipv6 addresses cause issues sometimes
+}
+
+ffmpeg_options = {
+    'options': '-vn'
+}
+
+ytdl = youtube_dl.YoutubeDL(ytdl_format_options)
+
+clients = {}  # guild: MusicClient
+
+async def get_client(message, client):
+    global clients
+    if not str(message.guild.id) in clients:
+        clients[str(message.guild.id)] = await MusicClient().create(message, client)
+    return clients[str(message.guild.id)]
+
+class YTDLSource(discord.PCMVolumeTransformer):
+    def __init__(self, source, *, data, volume=0.5):
+        super().__init__(source, volume)
+
+        self.data = data
+
+        self.title = data.get('title')
+        self.url = data.get('url')
+
+    @classmethod
+    async def from_url(cls, url, *, loop=None, stream=False):
+        loop = loop or asyncio.get_event_loop()
+        data = await loop.run_in_executor(None, lambda: ytdl.extract_info(url, download=not stream))
+
+        if 'entries' in data:
+            # take first item from a playlist
+            data = data['entries'][0]
+
+        filename = data['url'] if stream else ytdl.prepare_filename(data)
+        return cls(discord.FFmpegPCMAudio(filename, **ffmpeg_options), data=data)
+
+class Song:
+    def __init__(self, url):
+        info = ytdl.extract_info(url, download=False)
+        self.url = url
+        self.title = info['title']
+        self.image = info['thumbnail']
+
+class MusicClient:
     def __init__(self):
-        self.voice = None
-        self.queue = []
+        pass
 
-    def play_next_music(self, *_):
+    async def create(self, message, client):
+        if message.author.voice.channel:
+            self.voice_client = await message.author.voice.channel.connect()
+            self.queue = []
+            self.notif_channel = message.channel
+            self.client = client
+        return self
+
+    async def stream(self, song):
+        player = await YTDLSource.from_url(song.url, loop=self.client.loop, stream=True)
+        after = lambda e: asyncio.run_coroutine_threadsafe(self.play_next_music(), self.client.loop)
+        self.voice_client.play(player, after=after)
+
+        em = discord.Embed(title=song.title, description="now playing",
+                           url=song.url)
+        em.set_image(url=song.image)
+        await self.notif_channel.send(embed=em)
+
+    async def play_next_music(self):
         if not self.queue:
-            return self.disconnect
-        music = self.queue[0]
+            await self.disconnect()
+        song = self.queue[0]
         del self.queue[0]
-        audio_source = discord.FFmpegPCMAudio("musicqueue/" + music + ".mp3")
-        self.voice.play(audio_source, after=self.play_next_music)
-        self.delete_file
+        await self.stream(song)
+
+    async def add_to_queue(self, url):
+        song = Song(url)
+        self.queue.append(song)
+        em = discord.Embed(title="Ajouté à la queue", description=song.title)
+        em.set_image(url=song.image)
+        await self.notif_channel.send(embed=em)
+        if not self.voice_client.is_playing():
+            await self.play_next_music()
 
     async def disconnect(self):
-        self.voice.stop()
-        await self.voice.disconnect()
-        self.voice = None
-        self.queue = []
-        self.delete_file
+        await self.voice_client.disconnect()
+        global clients
+        del clients[self.voice_client.guild]
 
-    def delete_file(self):
-        for file in os.listdir("musicqueue"):
-            if file not in self.queue:
-                os.remove("musiquequeue/" + file)
-
-    async def cmd_music(self, message, args, member, *_):
+class CmdMusic:
+    async def cmd_music(self, message, args, member, force, client, *_):
+        global clients
         if not args:
             await message.channel.send("Aucun argument reçu.")
             return
-
+        music_client = await get_client(message, client)
         if args[0] == "disconnect":
-            if self.voice:
-                await self.disconnect()
-                await message.channel.send("Client déconnecté")
-            else:
-                await message.channel.send("Le client est déjà déconnecté")
-
+            await music_client.disconnect()
+            await message.channel.send("Client déconnecté")
         elif args[0] == "pause":
-            if not self.voice:
+            if not music_client.voice_client:
                 await message.channel.send("le client n'est pas connecté")
-            elif self.voice.is_paused():
+            elif music_client.voice_client.is_paused():
                 await message.channel.send("déjà en pause")
-            elif not self.voice.is_playing():
+            elif not music_client.voice_client.is_playing():
                 await message.channel.send("aucune musique en cours")
             else:
-                self.voice.pause()
-                await message.channel.send("mise en pause ...")
-
+                music_client.voice_client.pause()
+                await message.channel.send("mise en pause ... (``/music resume`` pour reprendre)")
         elif args[0] == "resume":
-            if not self.voice:
+            if not music_client.voice_client:
                 await message.channel.send("le client n'est pas connecté")
-            elif not self.voice.is_paused():
+            elif not music_client.voice_client.is_paused():
                 await message.channel.send("la pause n'est pas activé")
             else:
-                self.voice.resume()
+                music_client.voice_client.resume()
         else:
-            if not self.voice or not self.voice.is_connected():
-                channel = get_client_channel(message.guild, member)
-                self.voice = await channel.connect()
-            # add to the queue
-            with youtube_dl.YoutubeDL({}) as ydl:
-                info = ydl.extract_info(args[0], download=False)
-            em = discord.Embed(title="Ajouté à la queue",
-                               description=info['title'],
-                               colour=0xCC0000)
-            print(info['thumbnail'])
-            em.set_author(name=member.name, icon_url=member.avatar_url)
-            em.set_image(url=info['thumbnail'])
-            await message.channel.send(embed=em)
-            self.queue.append(download(info['title'], args[0])['title'])
-            if not self.voice.is_playing() and not self.voice.is_paused():
-                self.play_next_music()
+            await music_client.add_to_queue(args[0])

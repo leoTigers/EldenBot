@@ -6,6 +6,7 @@ save
 *.save
 boblebot-*
 private
-googlekey.json
 data
+googlekey.json
+__pycache__
 formula.png
