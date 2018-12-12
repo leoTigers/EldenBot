@@ -115,8 +115,7 @@ class CmdMusic:
             return
         music_client = await get_client(message, client)
         if args[0] == "disconnect":
-            await music_client.voice_client.disconnect(force=True)
-            del clients[message.guild.id]
+            await music_client.disconnect()
             await message.channel.send("Client déconnecté")
         elif args[0] == "pause":
             if not music_client.voice_client:
