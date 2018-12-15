@@ -105,7 +105,7 @@ class MusicClient:
     async def disconnect(self):
         await self.voice_client.disconnect()
         global clients
-        del clients[self.voice_client.guild.id]
+        del clients[str(self.voice_client.guild.id)]
 
 class CmdMusic:
     async def cmd_music(self, message, args, member, force, client, *_):
@@ -134,5 +134,7 @@ class CmdMusic:
                 await message.channel.send("la pause n'est pas activé")
             else:
                 music_client.voice_client.resume()
+        elif args[0] == "skip":
+            await music_client.play_next_music()
         else:
             await music_client.add_to_queue(args[0])
