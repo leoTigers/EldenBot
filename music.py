@@ -87,11 +87,13 @@ class MusicClient:
         await self.notif_channel.send(embed=em)
 
     async def play_next_music(self):
+        if self.voice_client.is_playing():
+            return self.voice_client.stop()
         if not self.queue:
-            await self.disconnect()
+            return await self.disconnect()
         song = self.queue[0]
         del self.queue[0]
-        await self.stream(song)
+        return await self.stream(song)
 
     async def add_to_queue(self, url):
         song = Song(url)
