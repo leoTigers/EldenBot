@@ -11,6 +11,7 @@ import subprocess
 
 if __name__ == '__main__':
     from function import *
+    from decorator import *
     from random_message import *
     from roll import CmdRoll
     from latex import CmdLatex
@@ -26,10 +27,12 @@ if __name__ == '__main__':
 
     class Command(CmdRoll, CmdLatex, CmdRgapi, CmdLink, CmdDeleteAllMessage,
                   CmdVerif, CmdLolScore, CmdMusic, CmdModeration, CmdLg):
-        async def cmd_help(self, message, *_):
+        async def cmd_help(self, *_, message, **__):
             with open("help", 'r') as fd:
                 await message.channel.send(fd.read())
-        async def python(self, m, args, member, *_, asyncrone=False):
+
+        @only_owner
+        async def python(self, *args, channel, member, asyncrone=False, **_):
             if member.id != 384274248799223818:
                 await(forbidden(m))
             else:
@@ -37,9 +40,11 @@ if __name__ == '__main__':
                     rt = await eval(" ".join(args))
                 else:
                     rt = eval(" ".join(args))
-                await m.channel.send(rt)
-        async def cmd_python(self, *args) : await self.python(*args, asyncrone=False)
-        async def cmd_apyhton(self, *args) : await self.python(*args, asyncrone=True)
+                await channel.send(rt)
+        async def cmd_python(self, *args, **kwargs) :
+            await self.python(*args, **kwargs, asyncrone=False)
+        async def cmd_apython(self, *args, **kwargs):
+            await self.python(*args, **kwargs, asyncrone=True)
     command = Command()
 
 logging.basicConfig(level=logging.INFO)
@@ -67,7 +72,8 @@ async def on_message(m):
         except:
             return
         try:
-            await function(m, args, member, force, client)
+            await function(*args, message=m, member=member, force=force, cmd=cmd,
+                           client=client, channel=m.channel, guild=m.guild)
         except Exception:
             em = discord.Embed(title="Oh no !  😱",
                                description="Une erreur s'est produite lors de l'éxécution de la commande\n" + msg("- [FATAL ERROR]\n" + traceback.format_exc()),

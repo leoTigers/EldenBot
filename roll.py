@@ -9,7 +9,7 @@ def roll_dice(nb, face):
     return (l)
 
 class CmdRoll:
-    async def cmd_roll(self, m, args, *_):
+    async def cmd_roll(self, *args, m, **_):
         arg = "".join(args).replace(" ","").lower()
         d,f,bonus = 1,100,0
         if 'd' in arg :
@@ -32,7 +32,7 @@ class CmdRoll:
         except:
             pass
 
-    async def cmd_bloodlustroll(self, m, args, *_):
+    async def cmd_bloodlustroll(self, *args, m, **_):
         arg = "".join(args).replace(" ","")
         if '+' in arg :
             r = int(arg.split('+')[1])

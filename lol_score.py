@@ -65,14 +65,14 @@ async def get_ranked_score(summoner_id):
 
 class CmdLolScore:
     @only_owner
-    async def cmd_refreshallscore(self, message, *_):
+    async def cmd_refreshallscore(self, *args, message, **_):
         msg = await message.channel.send("Calcul des scores")
         verif = load_verif()
         dic = {i:await get_ranked_score(i) for i in verif.values()}
         save_score(dic)
         await msg.edit(content="{} scores ont été mis à jour".format(len(dic)))
 
-    async def cmd_ladder(self, message, args, *_):
+    async def cmd_ladder(self, *args, message, **_):
         if not args or args[0] not in ['SoloQ', 'FlexQ', '3v3TT']:
             await message.channel.send("Préciser la queue [SoloQ/FlexQ/3v3TT]")
             return
@@ -84,7 +84,7 @@ class CmdLolScore:
                                 for i,j in enumerate(lst)]))
         await message.channel.send(txt)
 
-    async def cmd_info(self, message, args, member, *_):
+    async def cmd_info(self, *args, message, member, **_):
         summ_id, name = None, None
         if not args:
             verif = load_verif()

@@ -76,7 +76,7 @@ async def getSeasonMatches(accountId, timeline=False):
     return await asyncio.gather(*tasks)
 
 class CmdRgapi:
-    async def cmd_premade(self, message, args, member, *_):
+    async def cmd_premade(self, *args, message, member, **_):
         if not args : summonerName = member.name
         else : summonerName = " ".join(args)
         accountId, summonerId, iconId = await getSummoner(summonerName)
@@ -106,26 +106,27 @@ class CmdRgapi:
         await msg.edit(content="done", embed=em)
 
 
-    async def cmd_getsummid(self, m, args, *_):
+    async def cmd_getsummid(self, *args, message, **_):
         accountId, summonerId, a = await getSummoner(" ".join(args))
-        await m.channel.send("summonerId : {}\naccountId : {}".format(
+        await message.channel.send("summonerId : {}\naccountId : {}".format(
             str(summonerId),str(accountId)
         ))
 
 
     @not_offical_serv
-    async def cmd_kikimeter(self, m, args, member, *_):
+    async def cmd_kikimeter(self, *args, message, member, **_):
+        """/kikimeter {*nom d'invocateur}"""
         if not args: summonerName = member.name
         else : summonerName = "".join(args)
         accountId, summonerId, iconId = await getSummoner(summonerName)
         if not accountId or not summonerId:
-            await m.channel.send("Invocateur : {} non trouvé".format(summonerName))
+            await message.channel.send("Invocateur : {} non trouvé".format(summonerName))
             return None
         league = await getLeagueSoloQ(summonerId)
         if not league:
-            await m.channel.send("Cet invocateur n'est pas classé en SoloQ (et il y a que ça qui compte)")
+            await message.channel.send("Cet invocateur n'est pas classé en SoloQ (et il y a que ça qui compte)")
             return None
-        msg = await m.channel.send("Récupération des données en cours ...")
+        msg = await message.channel.send("Récupération des données en cours ...")
         dic1 = {"BRONZE":1,"SILVER":1.5,"GOLD":2.2,"PLATINUM":3,"DIAMOND":4,"MASTER":4.5,"CHALLENGER":5.5}
         dic2 = {"V":0.0, "IV":0.1, "III":0.3, "II":0.4, "I":0.5}
         league_bonus = dic1[league['tier']] + dic2[league['rank']]
@@ -156,7 +157,7 @@ class CmdRgapi:
         for i, j in bonus.items():
             recap += "\n{} {} : {}".format("-" if j < 0 else "+", i, str(j))
         if bonus : recap += "```"
-        try : colour = m.guild.get_member_named(summonerName).colour
+        try : colour = message.guild.get_member_named(summonerName).colour
         except : colour = 0xC0C0C0
         em = discord.Embed(title=title, description=recap, colour = colour)
         em.set_footer(text="INFO : " + str(len(seasonMatches)) + " matchs analysés")
@@ -164,18 +165,19 @@ class CmdRgapi:
         await msg.edit(content=".",embed=em)
 
     @not_offical_serv
-    async def cmd_afkmeter(self, m, args, member, *_):
+    async def cmd_afkmeter(self, *args, message, member, **_):
+        """/afkmeter {*nom d'invocateur}"""
         count = {}
         if not args: summonerName = member.name
         else : summonerName = "".join(args)
         accountId, summonerId, iconId = await getSummoner(summonerName)
         if not accountId :
-            await m.channel.send("Invocateur non trouvé : {}".format(summonerName))
+            await message.channel.send("Invocateur non trouvé : {}".format(summonerName))
             return None
-        try : colour = m.guild.get_member_named(summonerName).colour
+        try : colour = message.guild.get_member_named(summonerName).colour
         except : colour = 0xC0C0C0
         icon = "http://ddragon.canisback.com/latest/img/profileicon/"+str(iconId)+".png"
-        msg = await m.channel.send(embed=discord.Embed(title="Afk Meter",colour=colour).set_author(name=summonerName, icon_url=icon))
+        msg = await message.channel.send(embed=discord.Embed(title="Afk Meter",colour=colour).set_author(name=summonerName, icon_url=icon))
         matches, timelines = await getSeasonMatches(accountId, timeline=True)
         for i in range(len(matches)):
             for participant in matches[i]["participantIdentities"]:

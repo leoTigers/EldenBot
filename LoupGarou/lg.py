@@ -5,7 +5,7 @@ import random
 
 
 class CmdLg:
-    async def cmd_lg(self, message, args, member, force, client, *_):
+    async def cmd_lg(self, *args, message, member, force, client, **_):
         if args and args[0] == "start":
             await lg_start(message, args[1:], member, client)
 

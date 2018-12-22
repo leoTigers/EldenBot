@@ -8,8 +8,7 @@ MOD_MOVE = ("Votre message a été déplacé de {} à {} par {} pour la raison "
 
 class CmdModeration:
     @can_manage_message
-    async def cmd_mdelete(self, message, args, member, *_):
-        channel = message.channel
+    async def cmd_mdelete(self, *args, message, channel, member, **_):
         if not args:
             await channel.send("Pas d'argument reçu")
             return
@@ -23,8 +22,7 @@ class CmdModeration:
                                                          msg.content))
 
     @can_manage_message
-    async def cmd_mmove(self, message, args, member, force, client, *_):
-        channel = message.channel
+    async def cmd_mmove(self, *args, message, member, channel, force, client, **_):
         if not args:
             await chanel.send("Pas d'argument reçu")
             return

@@ -1,6 +1,7 @@
 import json
 import discord
 from random_message import *
+from decorator import *
 
 def load_link_file():
     try:
@@ -86,10 +87,8 @@ async def send_to_linked(client, message):
             except : pass
 
 class CmdLink:
-    async def cmd_link(self, message, args, member, *_):
-        if member.id != 384274248799223818:
-            await(forbidden(message))
-        else:
-            if args[0] == "show"  : await show(message)
-            if args[0] == "add"   : await add(message, args)
-            if args[0] == "delete": await delete(message, args)
+    @only_owner
+    async def cmd_link(self, *args, message, member, **_):
+        if args[0] == "show"  : await show(message)
+        if args[0] == "add"   : await add(message, args)
+        if args[0] == "delete": await delete(message, args)

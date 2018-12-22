@@ -110,30 +110,30 @@ class MusicClient:
         del clients[str(self.voice_client.guild.id)]
 
 class CmdMusic:
-    async def cmd_music(self, message, args, member, force, client, *_):
+    async def cmd_music(self, *args, message, channel, force, client, **_):
         global clients
         if not args:
-            await message.channel.send("Aucun argument reçu.")
+            await channel.send("Aucun argument reçu.")
             return
         music_client = await get_client(message, client)
         if args[0] == "disconnect":
             await music_client.disconnect()
-            await message.channel.send("Client déconnecté")
+            await channel.send("Client déconnecté")
         elif args[0] == "pause":
             if not music_client.voice_client:
-                await message.channel.send("le client n'est pas connecté")
+                await channel.send("le client n'est pas connecté")
             elif music_client.voice_client.is_paused():
-                await message.channel.send("déjà en pause")
+                await channel.send("déjà en pause")
             elif not music_client.voice_client.is_playing():
-                await message.channel.send("aucune musique en cours")
+                await channel.send("aucune musique en cours")
             else:
                 music_client.voice_client.pause()
-                await message.channel.send("mise en pause ... (``/music resume`` pour reprendre)")
+                await channel.send("mise en pause ... (``/music resume`` pour reprendre)")
         elif args[0] == "resume":
             if not music_client.voice_client:
-                await message.channel.send("le client n'est pas connecté")
+                await channel.send("le client n'est pas connecté")
             elif not music_client.voice_client.is_paused():
-                await message.channel.send("la pause n'est pas activé")
+                await channel.send("la pause n'est pas activé")
             else:
                 music_client.voice_client.resume()
         elif args[0] == "skip":
