@@ -41,8 +41,8 @@ class Announce:
         channel = author if mp else self.game.channel
         return await channel.send(embed=em)
 
-from LoupGarou.announce import load_announce
-from LoupGarou.constant import OPTION
+from LoupGarou.Loading.announce import load_announce
+from LoupGarou.Loading.constant import OPTION
 
 class Game:
     def __init__(self, mj, channel, client):

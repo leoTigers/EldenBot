@@ -1,4 +1,4 @@
-# from LoupGarou.announce import load_images
+# from LoupGarou.Loading.announce import load_images
 #
 # images = load_images()
 

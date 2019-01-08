@@ -1,4 +1,4 @@
-from LoupGarou.object import is_alive
+from LoupGarou.Loading.object import is_alive
 import discord
 
 async def update_msg(msg=None, player=None):

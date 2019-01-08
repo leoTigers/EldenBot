@@ -1,5 +1,5 @@
-from LoupGarou.object import Game, Player
-from LoupGarou.constant import *
+from LoupGarou.Loading.object import Game, Player
+from LoupGarou.Loading.constant import *
 import discord
 import random
 

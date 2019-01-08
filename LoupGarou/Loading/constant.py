@@ -1,4 +1,4 @@
-from LoupGarou.role import *
+from LoupGarou.Loading.role import *
 ROLE_LIST = [Werewolf, Villager, Seer,
              Witch, Hunter, Werewolf,
              Villager, Cupidon, Villager,

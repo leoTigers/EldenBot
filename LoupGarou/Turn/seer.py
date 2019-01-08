@@ -1,8 +1,8 @@
+import discord
 
 @is_alive("voyante")
 async def seer(game, player):
-    def check(message):
-        return message.author == player.member
+    check = lambda message: message.author == player.member
 
     em = discord.Embed(title="Joueur en vie",
                        description='\n'.join(

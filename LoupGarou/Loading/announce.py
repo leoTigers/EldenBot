@@ -1,5 +1,5 @@
-from LoupGarou.constant import ANN_GDOC_KEY, GOOGLE_TOKEN_PATH
-from LoupGarou.object import Announce
+from LoupGarou.Loading.constant import ANN_GDOC_KEY, GOOGLE_TOKEN_PATH
+from LoupGarou.Loading.object import Announce
 import gspread
 from oauth2client.service_account import ServiceAccountCredentials as sac
 
