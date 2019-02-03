@@ -32,15 +32,12 @@ if __name__ == '__main__':
                 await message.channel.send(fd.read())
 
         @only_owner
-        async def python(self, *args, channel, member, asyncrone=False, **_):
-            if member.id != 384274248799223818:
-                await(forbidden(m))
+        async def python(self, *args, message, channel, member, guild, client, force, cmd, asyncrone=False, **_):
+            if asyncrone:
+                rt = await eval(" ".join(args))
             else:
-                if asyncrone:
-                    rt = await eval(" ".join(args))
-                else:
-                    rt = eval(" ".join(args))
-                await channel.send(rt)
+                rt = eval(" ".join(args))
+            await channel.send(rt)
         async def cmd_python(self, *args, **kwargs) :
             await self.python(*args, **kwargs, asyncrone=False)
         async def cmd_apython(self, *args, **kwargs):

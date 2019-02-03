@@ -15,11 +15,11 @@ def not_offical_serv(func):
     return wrapper
 
 def only_owner(func):
-    async def wrapper(self, *args, member, channel, **kwargs):
+    async def wrapper(self, *args, member, channel, message, **kwargs):
         if member.id == OWNER_ID:
-            await func(self, *args, member=member, channel=channel, **kwargs)
+            await func(self, *args, member=member, channel=channel, message=message, **kwargs)
         else:
-            await channel.send(forbidden(message, who="only_owner"))
+            await forbidden(message, who="only_owner")
     return wrapper
 
 def can_manage_message(func):

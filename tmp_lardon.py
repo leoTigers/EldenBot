@@ -19,7 +19,7 @@ def get_role(name):
 
 @client.event
 async def on_message(m):
-    if m.content.startswith('/get') :#and m.author == client.user:
+    if m.content.startswith('/get ') :#and m.author == client.user:
         m.content = m.content.lower()
         args = ' '.join(m.content.split(' ')[1:])
         if args in ROLES:

@@ -12,10 +12,11 @@ class CmdDeleteAllMessage:
             "Toute les données seront perdu à jamais dans mon estomac !\n" +
             "Tape /confirmdelete si tu es VRAIMENT sur. (20 secondes avant expiration)")
 
-        check = lambda msg: msg.content == "/confirmdelete" and msg.author == member and msg.channel == m.channel
-        try:
-            await client.wait_for("message", check=check, timeout=20)
-        except:
-            await channel.send("ECHEC DE CONFIRMATION : veuillez réesayer")
-            return None
+        check = lambda msg: msg.content == "/confirmdelete" and msg.author == member and msg.channel == channel
+        if not force:
+            try:
+                await client.wait_for("message", check=check, timeout=20)
+            except:
+                await channel.send("ECHEC DE CONFIRMATION : veuillez réesayer")
+                return None
         await channel.purge(limit=10000)
