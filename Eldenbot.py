@@ -32,6 +32,11 @@ if __name__ == '__main__':
                 await message.channel.send(fd.read())
 
         @only_owner
+        async def cmd_bash(self, *args, message, channel, member, guild, client, force, cmd, **_):
+            r = subprocess.run(' '.join(args), shell=True, text=True, stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
+            await channel.send(r.stdout or "(Command return code {})".format(r.returncode))
+            
+        @only_owner
         async def python(self, *args, message, channel, member, guild, client, force, cmd, asyncrone=False, **_):
             if asyncrone:
                 rt = await eval(" ".join(args))
