@@ -1,4 +1,5 @@
 import discord
+import datetime
 from decorator import can_manage_message
 
 MOD_DELETED = ("Votre message a été supprimé par {} pour la raison suivante :"
@@ -36,6 +37,7 @@ class CmdModeration:
     @can_manage_message
     async def cmd_mmove(self, *args, message, member, channel, client, **_):
         """/mmove {message_id} {channel} [!][*raison]"""
+        await message.delete()
         if not args:
             await chanel.send("Pas d'argument reçu")
             return
@@ -48,11 +50,11 @@ class CmdModeration:
                 reason = MOD_MOVE.format(channel.mention, target.mention,
                                          member.mention, reason[1:])
         await move_message(msg, target)
-        await message.delete()
 
     @can_manage_message
     async def cmd_mmoveafter(self, *args, channel, member, message, client, **_):
         """/mmoveafter {message_id} {channel} [!][*raison]"""
+        await message.delete()
         if not args:
             await channel.send("Pas d'argument reçu")
             return
@@ -64,7 +66,8 @@ class CmdModeration:
             if reason.startswith('!'):
                 reason = MOD_MOVE.format(channel.mention, target.mention,
                                          member.mention, reason[1:])
-        history = await channel.history(after=msg, limit=None).flatten()
+        history = await channel.history(after=msg.created_at - datetime.timedelta(milliseconds=1),
+                                        limit=None).flatten()
         notified = set()
         for msg in history:
             await move_message(msg, target,

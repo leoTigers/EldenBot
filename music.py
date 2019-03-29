@@ -17,12 +17,13 @@ ytdl_format_options = {
     'ignoreerrors': False,
     'logtostderr': False,
     'quiet': True,
-    'no_warnings': True,
+    'no_warnings': False,
     'default_search': 'auto',
     'source_address': '0.0.0.0' # bind to ipv4 since ipv6 addresses cause issues sometimes
 }
 
 ffmpeg_options = {
+    'before_options': " -reconnect 1 -reconnect_streamed 1 -reconnect_delay_max 5",
     'options': '-vn'
 }
 
@@ -78,7 +79,7 @@ class MusicClient:
 
     async def stream(self, song):
         player = await YTDLSource.from_url(song.url, loop=self.client.loop, stream=True)
-        after = lambda e: asyncio.run_coroutine_threadsafe(self.play_next_music(), self.client.loop)
+        after = lambda e: asyncio.run_coroutine_threadsafe(self.play_next_music(), self.client.loop) if not e else print("ERR:", e)
         self.voice_client.play(player, after=after)
 
         em = discord.Embed(title=song.title, description="now playing",
