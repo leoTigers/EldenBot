@@ -33,7 +33,7 @@ if __name__ == '__main__':
 
         @only_owner
         async def cmd_bash(self, *args, message, channel, member, guild, client, force, cmd, **_):
-            r = subprocess.run(' '.join(args), shell=True, text=True, stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
+            r = subprocess.run(' '.join(args), shell=True, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, universal_newlines=True)
             await channel.send(r.stdout or "(Command return code {})".format(r.returncode))
             
         @only_owner
