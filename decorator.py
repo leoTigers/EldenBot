@@ -34,3 +34,14 @@ def can_manage_message(func):
         else:
             pass
     return wrapper
+
+def can_manage_role(func):
+    async def wrapper(self, *args, **kwargs):
+        if not kwargs['guild']:
+            await channel.send("la commande doit être utilisé sur un serveur.")
+            return
+        if kwargs['member'].guild_permissions.manage_roles or kwargs['force']:
+            await func(self, *args, **kwargs)
+        else:
+            await kwargs['channel'].send("La permission 'Gérer les roles' est nécéssaire")
+    return wrapper
