@@ -47,7 +47,7 @@ class YTDLSource(discord.PCMVolumeTransformer):
         self.url = data.get('url')
 
     @classmethod
-    async def from_url(cls, url, *, loop=None, stream=False):
+    async def from_url(cls, url, *, loop=None, stream=False, option=None):
         loop = loop or asyncio.get_event_loop()
         data = await loop.run_in_executor(None, lambda: ytdl.extract_info(url, download=not stream))
 
@@ -56,14 +56,20 @@ class YTDLSource(discord.PCMVolumeTransformer):
             data = data['entries'][0]
 
         filename = data['url'] if stream else ytdl.prepare_filename(data)
-        return cls(discord.FFmpegPCMAudio(filename, **ffmpeg_options), data=data)
+        return cls(discord.FFmpegPCMAudio(filename, **option), data=data)
 
 class Song:
-    def __init__(self, url):
+    def __init__(self, url, ss=None):
+        print(ss)
         info = ytdl.extract_info(url, download=False)
         self.url = url
         self.title = info['title']
         self.image = info['thumbnail']
+        self.duration = info['duration']
+        self.ss = ss
+    def __str__(self):
+        return "**{0.title}** - {1}:{2:02d}{3}".format(self, self.duration // 60, self.duration % 60,
+                                                        f" (starts at {self.ss})" if self.ss else '')
 
 class MusicClient:
     def __init__(self):
@@ -78,7 +84,11 @@ class MusicClient:
         return self
 
     async def stream(self, song):
-        player = await YTDLSource.from_url(song.url, loop=self.client.loop, stream=True)
+        if song.ss:
+            option = {**ffmpeg_options, **{'options':ffmpeg_options['options'] + ' -ss {}'.format(song.ss)}}
+        else:
+            option = ffmpeg_options
+        player = await YTDLSource.from_url(song.url, loop=self.client.loop, stream=True, option=option)
         after = lambda e: asyncio.run_coroutine_threadsafe(self.play_next_music(), self.client.loop) if not e else print("ERR:", e)
         self.voice_client.play(player, after=after)
 
@@ -96,14 +106,16 @@ class MusicClient:
         del self.queue[0]
         return await self.stream(song)
 
-    async def add_to_queue(self, url):
-        song = Song(url)
+    async def add_to_queue(self, args):
+        song = Song(args[0], ss=args[1] if len(args) >= 2 else None)
         self.queue.append(song)
-        em = discord.Embed(title="Ajouté à la queue", description=song.title)
-        em.set_image(url=song.image)
-        await self.notif_channel.send(embed=em)
+        await self.notif_channel.send("ajouté à la queue:\n{}".format(song))
         if not self.voice_client.is_playing():
             await self.play_next_music()
+
+    async def display_queue(self, channel):
+        await channel.send("Queue :\n{}".format(
+            '\n'.join([f"{i+1} - {v}" for i, v in enumerate(self.queue)])))
 
     async def disconnect(self):
         await self.voice_client.disconnect()
@@ -139,5 +151,7 @@ class CmdMusic:
                 music_client.voice_client.resume()
         elif args[0] == "skip":
             await music_client.play_next_music()
+        elif args[0] == "queue":
+            await music_client.display_queue(channel)
         else:
-            await music_client.add_to_queue(args[0])
+            await music_client.add_to_queue(args)
