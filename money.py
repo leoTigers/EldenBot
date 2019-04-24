@@ -4,7 +4,7 @@ import json
 class MoneyDict():
     def __init__(self):
         with open("private/coins.save", 'r') as fd:
-            self.dic = json.load(fd.read())
+            self.dic = json.load(fd)
 
     def _save(self):
         with open("private/coins.save", 'w') as fd:
@@ -24,7 +24,7 @@ class MoneyDict():
             m = guild.get_member_named(member)
             if not m: return None
             else: return self._return_data(m.id)
-        if isinstance(member, discord.User):
+        if isinstance(member, discord.User) or isinstance(member, discord.Member):
             return self._return_data(member.id)
 
     def get_money(self, *args, **kwargs):
@@ -53,6 +53,7 @@ class CmdMoney:
         await self.cmd_coin(self, *args, **kw)
 
     async def cmd_coin(self, *args, member, channel, guild, **_):
+        
         you = False if len(args) >= 1 else True
         if not you:
             target = guild.get_member_named(" ".join(args))
@@ -64,7 +65,7 @@ class CmdMoney:
         await channel.send("{} avez {} coins sur votre compte".format("Vous avez" if you else f"{target.name} a", value))
 
     async def cmd_pay(self, *args, guild, channel, member, **_):
-        if args < 2:
+        if len(args) < 2:
             return await channel.send("USAGE: /pay {valeur} {membre}")
         target = guild.get_member_named(' '.join(args[1:]))
         if not target:

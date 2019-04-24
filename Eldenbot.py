@@ -15,7 +15,7 @@ if __name__ == '__main__':
     from random_message import *
     from roll import CmdRoll
     from latex import CmdLatex
-    #from money import balance
+    from money import CmdMoney
     from rgapi import CmdRgapi
     from link import CmdLink, send_to_linked
     from deleteallmessage import CmdDeleteAllMessage
@@ -23,10 +23,12 @@ if __name__ == '__main__':
     from lol_score import CmdLolScore
     from music import CmdMusic
     from moderation_tools import CmdModeration
+    from info import CmdInfos
     from LoupGarou.lg import CmdLg
 
     class Command(CmdRoll, CmdLatex, CmdRgapi, CmdLink, CmdDeleteAllMessage,
-                  CmdVerif, CmdLolScore, CmdMusic, CmdModeration, CmdLg):
+                  CmdVerif, CmdLolScore, CmdMusic, CmdModeration, CmdLg,
+                  CmdMoney, CmdInfos):
         async def cmd_help(self, *_, message, **__):
             with open("help", 'r') as fd:
                 await message.channel.send(fd.read())

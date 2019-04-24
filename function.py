@@ -1,4 +1,7 @@
 import discord
+import re
+
+mention_regex = re.compile(r"(?<=^<@)\d+(?=>$)")
 
 def msg(message, error=False):
     if error : return("```diff\n- [ERREUR]\n{}```".format(message))
@@ -16,3 +19,14 @@ def get_role_named(server, name):
     for i in server.roles:
         if i.name == name : return(i)
     return(None)
+
+def get_member(guild, name):
+    member = guild.get_member_named(name)
+    if member:
+        return member
+    match = re.search(mention_regex, name)
+    if match:
+        return guild.get_member(int(match[0]))
+    if name.isdigit():
+        return guild.get_member(int(name))
+    return None
