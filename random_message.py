@@ -31,6 +31,14 @@ NOT_FOUND = [
     "404 ! 404 ! 404 ! 404 ! ARRRRRGGGG !"
 ]
 
+DAILY_CLAIM = [
+    "Vous avez reçu votre paye de 100 coins, merci d'utiliser les services Elden et fils et nous esperont vous revoir bientôt !",
+    "*Jette une bourse de 100 coins et boude dans son coin*",
+    "Tiens, voilà tes 100 coins !",
+    "*donne 100 coins* ... A force de donner des sous, je pourrais plus nager dedans ...",
+    "Vous avez reçu vos 100 coins quotidien !"
+]
+
 
 async def random_message(client, message):
     if "boop" in message.content.lower():

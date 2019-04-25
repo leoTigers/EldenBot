@@ -1,4 +1,7 @@
+from datetime import datetime, timedelta
+from random_message import DAILY_CLAIM
 import discord
+import random
 import json
 
 class MoneyDict():
@@ -13,7 +16,7 @@ class MoneyDict():
     def _return_data(self, id):
         id = str(id)
         if id not in self.dic:
-            self.dic[id] = {"money": 0, "daily_countdown": 0}
+            self.dic[id] = {"money": 0, "last_daily": 0}
             self._save()
         return self.dic[id]
 
@@ -44,13 +47,18 @@ class MoneyDict():
         self._save()
         return True
 
+    def set_last_daily(self, target, value, **kw):
+        d = self.get(target, **kw)
+        d["last_daily"] = value
+        self._save()
+
 
 
 bank = MoneyDict()
 
 class CmdMoney:
     async def cmd_coins(self, *args, **kw):
-        await self.cmd_coin(self, *args, **kw)
+        await self.cmd_coin(*args, **kw)
 
     async def cmd_coin(self, *args, member, channel, guild, **_):
         
@@ -63,6 +71,17 @@ class CmdMoney:
             target = member
         value = bank.get_money(target)
         await channel.send("{} avez {} coins sur votre compte".format("Vous avez" if you else f"{target.name} a", value))
+
+    async def cmd_daily(self, *args, member, channel, **__):
+        last_daily = bank.get(member)["last_daily"]
+        last_dt = datetime.fromtimestamp(last_daily)
+        if last_dt + timedelta(hours=22) < datetime.now():
+            bank.add_money(member, 100)
+            await channel.send(random.choice(DAILY_CLAIM))
+            bank.set_last_daily(member, datetime.now().timestamp())
+        else:
+            timeleft = str((last_dt + timedelta(hours=22)) - datetime.now()).split('.')[0]
+            await channel.send("Veuillez patientez {} avant de vouloir toucher votre récompense".format(timeleft))
 
     async def cmd_pay(self, *args, guild, channel, member, **_):
         if len(args) < 2:
