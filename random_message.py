@@ -32,7 +32,7 @@ NOT_FOUND = [
 ]
 
 DAILY_CLAIM = [
-    "Vous avez reçu votre paye de 100 coins, merci d'utiliser les services Elden et fils et nous esperont vous revoir bientôt !",
+    "Vous avez reçu votre paye de 100 coins, merci d'utiliser les services Elden et fils et nous esperons vous revoir bientôt !",
     "*Jette une bourse de 100 coins et boude dans son coin*",
     "Tiens, voilà tes 100 coins !",
     "*donne 100 coins* ... A force de donner des sous, je pourrais plus nager dedans ...",
