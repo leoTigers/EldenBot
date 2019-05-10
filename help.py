@@ -1,0 +1,75 @@
+import discord
+
+helper = {
+    "Moderation": {
+        "/mdelete": "``{message_id} [!][raison]`` Supprime le message, si un ! est donné avant la raison, une notification est envoyé à la personne",
+        "/mmove": "``{message_id} {channel_id} [!][raison]`` Déplace le message donné vers le channel donné, si un ! est donné avant la raison, une notification est envoyé à la personne",
+        "/mmoveafter": "``{message_id} {channel_id} [!][raison]`` Déplace tout les message après celui donné (inclu) dans le channel x, si un ! est donné avant la raison, une (et une seule) notification est envoyé à la personne",
+    },
+    "Money": {
+        "/coin": "``[member]`` Affiche le nombre de compte de `member`, si `member` n'est pas donné, affiche votre compte",
+        "/daily": "Récupère votre somme quotidienne",
+        "/pay": "``{value} {member}`` Envoie `valeur` coins à `member`",
+    },
+    "Music": {
+        "/music {lien Youtube}" : "Ajoute la musique à la queue",
+        "/music skip" : "Passe à la musique suivante",
+        "/music pause" : "met en pause la musique",
+        "/music resume" : "enlève la pause de la musique",
+        "/music disconnect" : "déconnecte le bot du canal",
+    },
+    "OpenRole": {
+        "/roleadd": "``{role}`` Ajoute le role dans la liste des roles joinable",
+        "/roledel": "``{role}`` Supprime le role de la liste des roles joinable",
+        "/rolelist": "Affiche la liste des roles joinable",
+    },
+    "RiotAPI": {
+        '/verif' : "Affiche les informations pour la vérification (nécessaire pour certaines commandes)",
+        '/afkmeter' : "Affiche le nombre d'AFK de l'invocateur sur les 100 dernières games.",
+        '/kikimeter' : "Permet de savoir .... bref le nom de la commande quoi.",
+        '/premade' : "Affiche le nombre de partie jouer avec chaque joueurs",
+        '/info' : "Affiche le rank de l'invocateur et son classement sur le serveur.",
+        '/ladder': "``SoloQ / FlexQ / 3v3TT`` Affiche les meilleurs invocateur du serveur dans la queue sélectionnée",
+    },
+    "Roll": {
+        '/r ou /roll' : "``[x]d[y][+ ou -][b]`` Lance x dé(s) y avec un bonus/malus de b.",
+        '/br ou /rb' : "``x[+r]`` Lancer de dé de bloodlust, lance x dé(s) 6 avec r risque.",
+    },
+    "SuperAdmin": {
+        "/kill": "Envoie un SIGKILL au bot (j'aime pas trop ce moment là)",
+        "/refreshallscore": "Refresh tout les scores pour le /info et /ladder de la RGAPI",
+        "/force": "``commande`` permet de bypass les check de permission",
+        "/python": "``code`` éxecute le code python donné dans le bot",
+        "/bash": "``bash`` éxecute le code donné dans bash",
+    },
+    "Useless": {
+        '/thanossnap': "Affiche un simulateur de thanos snap sur le serveur",
+        "/latex": "``{commande latex}`` affiche une image formaté par LaTeX",
+        "/memberinfo": "``[member]`` affiche les informations d'un membre",
+    },
+}
+
+
+
+class CmdHelp:
+    async def cmd_help(self, *args, channel, **_):
+        if not args:
+            em = discord.Embed(title="Help")
+            em.set_footer(text="Entrez /help {module} pour plus de détail")
+            for k, v in helper.items():
+                em.add_field(name=f"**{k}**",
+                             value=',    '.join([f"``{i}``" for i in v.keys()]), inline=False)
+            await channel.send(embed=em)
+        elif args[0] in helper:
+            d = helper[args[0]]
+            em = discord.Embed(title=f"Help {args[0]}")
+            for k, v in d.items():
+                if v.startswith('``'):
+                    a, t = v.split('``')[1], '``'.join(v.split('``')[2:])
+                    em.add_field(name=f"**{k}** ``{a}``", value=t, inline=False)
+                else:
+                    em.add_field(name=f"**{k}**", value=v, inline=False)
+            await channel.send(embed=em)
+        else:
+            await channel.send("Erreur: J'ai pas trouvé le module dans mon manuel :(")
+            
