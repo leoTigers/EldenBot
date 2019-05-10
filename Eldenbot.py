@@ -41,9 +41,9 @@ if __name__ == '__main__':
         @only_owner
         async def python(self, *args, message, channel, member, guild, client, force, cmd, asyncrone=False, **_):
             if asyncrone:
-                rt = await eval(" ".join(args))
+                rt = await eval(" ".join(args).strip('`'))
             else:
-                rt = eval(" ".join(args))
+                rt = eval(" ".join(args).strip('`'))
             await channel.send(rt)
         async def cmd_python(self, *args, **kwargs) :
             await self.python(*args, **kwargs, asyncrone=False)
