@@ -6,6 +6,7 @@ import asyncio
 import logging
 import json
 import traceback
+import signal
 import shlex
 import subprocess
 
@@ -13,6 +14,7 @@ if __name__ == '__main__':
     from function import *
     from decorator import *
     from random_message import *
+    from help import CmdHelp
     from roll import CmdRoll
     from latex import CmdLatex
     from money import CmdMoney
@@ -29,11 +31,10 @@ if __name__ == '__main__':
 
     class Command(CmdRoll, CmdLatex, CmdRgapi, CmdLink, CmdDeleteAllMessage,
                   CmdVerif, CmdLolScore, CmdMusic, CmdModeration, CmdLg,
-                  CmdMoney, CmdInfos, CmdUseless):
-        async def cmd_help(self, *_, message, **__):
-            with open("help", 'r') as fd:
-                await message.channel.send(fd.read())
-
+                  CmdMoney, CmdInfos, CmdUseless, CmdHelp):
+        @only_owner
+        async def cmd_kill(self, *args, **_):
+            os.kill(os.getpid(), signal.SIGKILL)
         @only_owner
         async def cmd_bash(self, *args, message, channel, member, guild, client, force, cmd, **_):
             r = subprocess.run(' '.join(args), shell=True, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, universal_newlines=True)
