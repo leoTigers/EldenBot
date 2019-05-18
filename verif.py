@@ -48,7 +48,6 @@ class CmdVerif:
         await message.channel.send("{} membres ont été ajouté".format(count))
 
     async def cmd_verif(self, *args, channel, member, message, **_):
-        print(args)
         verified = load_verif()
         if not args:
             if str(member.id) in verified.keys():

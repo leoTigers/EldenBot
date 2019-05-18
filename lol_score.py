@@ -88,7 +88,7 @@ class CmdLolScore:
         summ_id, name = None, None
         if not args:
             verif = load_verif()
-            if member.id in verif:
+            if str(member.id) in verif:
                 summ_id = verif[str(member.id)]
             else:
                 name = member.display_name
