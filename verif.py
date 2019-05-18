@@ -11,7 +11,7 @@ NOT_VERIFIED = "Vous n'êtes vérifié.\nPour le devenir, connectez vous sur le 
     + "client League of Legends, puis paramètre > code de vérification tier.\n"\
     + "Entrez votre ID discord ({}) puis cliquez sur valider.\n"\
     + "Entrez ensuite /verif {{votre_nom_d'invocateur}}"
-VERIFIED = "Vous êtes vérifié !\nNom d'invocateur : {name}\nSummoner ID : {id}"
+VERIFIED = "Vous êtes vérifié !\nNom d'invocateur : {name}\nNiveau : {summonerLevel}"
 BAD_CODE = "Erreur : Le code que vous avez rentrez rentrer ne corespond pas à votre"\
          + " id discord, veuillez résayer. Si le problème persiste, "\
          + "essayez de redémarrer votre client"

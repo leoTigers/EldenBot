@@ -54,7 +54,7 @@ async def get_leaderboard_place(message, summ_id, rank):
     l = sorted(l, key=lambda x: x[1])[::-1]
     return ([i[0] for i in l].index(summ_id) + 1, len(l))
 
-async def get_ranked_score(summoner_id):
+async def get_ranked_score(summoner_id: str) -> dict:
     print("getting score for : {}".format(summoner_id))
     data = await panth.getLeaguePosition(summoner_id)
     pos = {QUEUE[i["queueType"]]:
@@ -103,6 +103,7 @@ class CmdLolScore:
             return None
         icon = "http://ddragon.canisback.com/latest/img/profileicon/"+str(data['profileIconId'])+".png"
         score = load_score()
+        score[data['id']] = get_ranked_score(data['id'])
         txt = ""
         for i in ["SoloQ", "FlexQ", "3v3TT"]:
             lead = await get_leaderboard_place(message, data['id'], i)
@@ -114,6 +115,7 @@ class CmdLolScore:
         elif message.guild:
             target = message.guild.get_member_named(name)
             if target : colour = target.colour
-        em = discord.Embed(title="Information de l'invocateur", description=txt + "", colour=member.colour)
+        em = discord.Embed(title="Information de l'invocateur", description=txt + "", colour=colour)
         em.set_author(name=data['name'], icon_url=icon)
         await message.channel.send(embed=em)
+        save_score(score)
