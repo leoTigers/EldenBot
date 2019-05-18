@@ -86,14 +86,17 @@ class CmdLolScore:
 
     async def cmd_info(self, *args, message, member, **_):
         summ_id, name = None, None
+        print(args, bool(args))
         if not args:
             verif = load_verif()
+            print(str(member.id), verif, str(member.id) in verif)
             if str(member.id) in verif:
                 summ_id = verif[str(member.id)]
             else:
                 name = member.display_name
         else:
             name = " ".join(args)
+        print(summ_id, bool(summ_id))
         if summ_id:
             data = await panth.getSummoner(summ_id)
         else:
@@ -103,7 +106,7 @@ class CmdLolScore:
             return None
         icon = "http://ddragon.canisback.com/latest/img/profileicon/"+str(data['profileIconId'])+".png"
         score = load_score()
-        score[data['id']] = get_ranked_score(data['id'])
+        score[data['id']] = await get_ranked_score(data['id'])
         txt = ""
         for i in ["SoloQ", "FlexQ", "3v3TT"]:
             lead = await get_leaderboard_place(message, data['id'], i)
