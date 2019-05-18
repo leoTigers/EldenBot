@@ -1,5 +1,5 @@
 from pantheon import pantheon
-from decorator import not_offical_serv
+from decorator import not_offical_serv, only_owner
 import requests
 import asyncio
 import discord
@@ -105,9 +105,9 @@ class CmdRgapi:
                       icon_url="http://ddragon.canisback.com/latest/img/profileicon/"+str(iconId)+".png")
         await msg.edit(content="done", embed=em)
 
-
+    @only_owner
     async def cmd_getsummid(self, *args, message, **_):
-        d = await panth.getSummonerByName(name)
+        d = await panth.getSummonerByName(' '.join(args))
         await message.channel.send("ID : {id}\naccountId : {accountId}\npuuid : {puuid}".format(
             **d
         ))
