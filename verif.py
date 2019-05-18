@@ -26,28 +26,28 @@ def save_verif(dic):
         fd.write(json.dumps(dic))
 
 class CmdVerif:
-    # @only_owner
-    # async def cmd_forumverif(self, message, args, member, force, client, *_):
-    #     guild = client.get_guild(367683573014069249)
-    #     count = 0
-    #     members = [member for member in guild.members if "Vérifié" in [
-    #                                             role.name for role in member.roles]
-    #     ]
-    #     verified = load_verif()
-    #     for member in members:
-    #         if str(member.id) not in verified.keys():
-    #             print(member.display_name)
-    #             try:
-    #                 summ_data = await panth.getSummonerByName(member.display_name)
-    #             except:
-    #                 await message.channel.send("Impossible de vérifier {}".format(member.display_name))
-    #                 continue
-    #             verified[str(member.id)] = summ_data['id']
-    #             count += 1
-    #     save_verif(verified)
-    #     await message.channel.send("{} membres ont été ajouté".format(count))
+    @only_owner
+    async def cmd_importverif(self, *args, message, client, **_):
+        guild = client.get_guild(511938608475930644)
+        count = 0
+        members = [member for member in guild.members if "Joueur" in [
+                                                role.name for role in member.roles]
+        ]
+        verified = load_verif()
+        for member in members:
+            if str(member.id) not in verified.keys():
+                print(member.display_name)
+                try:
+                    summ_data = await panth.getSummonerByName(member.display_name)
+                except:
+                    await message.channel.send("Impossible de vérifier {}".format(member.display_name))
+                    continue
+                verified[str(member.id)] = summ_data['id']
+                count += 1
+        save_verif(verified)
+        await message.channel.send("{} membres ont été ajouté".format(count))
 
-    async def cmd_verif(self, *args, channel, member, **_):
+    async def cmd_verif(self, *args, channel, member, message, **_):
         print(args)
         verified = load_verif()
         if not args:
@@ -75,4 +75,4 @@ class CmdVerif:
                 return False
             verified[str(member.id)] = summ_data['id']
             save_verif(verified)
-            await self.cmd_verif(message, None, member)
+            await self.cmd_verif(*args, message=message, channel=channel, member=member)

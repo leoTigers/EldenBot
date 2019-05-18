@@ -107,9 +107,9 @@ class CmdRgapi:
 
 
     async def cmd_getsummid(self, *args, message, **_):
-        accountId, summonerId, a = await getSummoner(" ".join(args))
-        await message.channel.send("summonerId : {}\naccountId : {}".format(
-            str(summonerId),str(accountId)
+        d = await panth.getSummonerByName(name)
+        await message.channel.send("ID : {id}\naccountId : {accountId}\npuuid : {puuid}".format(
+            **d
         ))
 
 
