@@ -5,6 +5,8 @@ import asyncio
 import discord
 import time
 
+SEASON = 13
+
 with open("private/rgapikey") as key:
     panth = pantheon.Pantheon("euw1", key.read(), True)
 
@@ -57,7 +59,7 @@ async def getLastYearHistory(accountId):
     return await asyncio.gather(*tasks)
 
 async def getSoloQSeasonMatches(accountId):
-    soloQ =  await panth.getMatchlist(accountId, params={"queue":420,"season":11})
+    soloQ =  await panth.getMatchlist(accountId, params={"queue":420,"season":SEASON})
     matchlist = soloQ['matches']
     #flexQ = await panth.getMatchlist(accountId, params={"queue":440,"season":11})
     #matchlist += flexQ['matches']
@@ -65,7 +67,7 @@ async def getSoloQSeasonMatches(accountId):
     return await asyncio.gather(*tasks)
 
 async def getSeasonMatches(accountId, timeline=False):
-    matches =  await panth.getMatchlist(accountId, params={"season":11})
+    matches =  await panth.getMatchlist(accountId, params={"season":SEASON})
     matchlist = matches['matches']
     tasks = [panth.getMatch(match["gameId"]) for match in matchlist]
     if timeline:
