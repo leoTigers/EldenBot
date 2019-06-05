@@ -49,7 +49,7 @@ class CmdModeration:
             if reason.startswith('!'):
                 reason = MOD_MOVE.format(channel.mention, target.mention,
                                          member.mention, reason[1:])
-        await move_message(msg, target)
+        await move_message(msg, target, reason)
 
     @can_manage_message
     async def cmd_mmoveafter(self, *args, channel, member, message, client, **_):
