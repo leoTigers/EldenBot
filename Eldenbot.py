@@ -85,12 +85,14 @@ async def on_message(m):
                                description="Une erreur s'est produite lors de l'éxécution de la commande\n" + msg("- [FATAL ERROR]\n" + traceback.format_exc()),
                                colour=0xFF0000).set_footer(text="command : " + m.content,icon_url=m.author.avatar_url)
             await m.channel.send(embed=em)
-    if client.user in m.mentions and m.author != client.user:
+    if m.content.startswith(f"<@{client.user.id}> play"):
+        print(m.content.split(' ')[2:])
+        args = m.content.split(' ')[2:]
+        await command.cmd_music(*args, message=m, member=m.author, force=False, cmd=None,
+                                client=client, channel=m.channel, guild=m.guild)
+    elif client.user in m.mentions and m.author != client.user:
         await random_message(client, m)
     await send_to_linked(client, m)
-    # TODO faire un vrai truc pour ces mecs
-    if m.channel.id == 437540382683955221:
-        await m.author.add_roles(*[r for r in m.guild.roles if r.id == 378878258671910932])
 
 
 if __name__ == '__main__':

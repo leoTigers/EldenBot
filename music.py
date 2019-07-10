@@ -1,6 +1,8 @@
 import discord
 import youtube_dl
+import aiohttp
 import os
+import re
 import asyncio
 
 
@@ -90,6 +92,7 @@ class MusicClient:
             option = ffmpeg_options
         player = await YTDLSource.from_url(song.url, loop=self.client.loop, stream=True, option=option)
         after = lambda e: asyncio.run_coroutine_threadsafe(self.play_next_music(), self.client.loop) if not e else print("ERR:", e)
+        await asyncio.sleep(1)
         self.voice_client.play(player, after=after)
 
         em = discord.Embed(title=song.title, description="now playing",
@@ -125,6 +128,7 @@ class MusicClient:
 class CmdMusic:
     async def cmd_music(self, *args, message, channel, force, client, **_):
         global clients
+        print(args)
         if not args:
             await channel.send("Aucun argument reçu.")
             return
@@ -153,5 +157,28 @@ class CmdMusic:
             await music_client.play_next_music()
         elif args[0] == "queue":
             await music_client.display_queue(channel)
+        elif args[0] == "search":
+            music = await search_music('+'.join(args[1:]))
+            if not music:
+                return await channel.send("J'ai trouvé aucune musique portant ce nom :(")
+            await music_client.add_to_queue([music])
         else:
+            if not re.match(r".*www\.youtube\.com/watch\?v=.*", args[0]):
+                music = await search_music('+'.join(args))
+                if not music:
+                    return await channel.send("J'ai trouvé aucune musique portant ce nom :(")
+                print(music)
+                return await music_client.add_to_queue([music])
             await music_client.add_to_queue(args)
+
+
+async def search_music(song_name):
+    async with aiohttp.ClientSession() as client:
+        async with client.get('https://www.youtube.com/results?search_query={}'.format(song_name)) as resp:
+            assert resp.status == 200
+            html = await resp.text()
+    result = re.findall(r'href=\"\/watch\?v=(.{11})', html)
+    print(result)
+    if not result:
+        return None
+    return "https://www.youtube.com/watch?v=" + result[0]
