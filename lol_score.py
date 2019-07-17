@@ -80,7 +80,7 @@ class CmdLolScore:
         lst = lst[:20]
         tasks = [panth.getSummoner(summ_id) for summ_id in [i[0] for i in lst]]
         summ_name = [i['name'] for i in await asyncio.gather(*tasks)]
-        txt = "```{}```".format('\n'.join(["{:>2}.{:>15} {}".format(i+1, summ_name[i], j[1][1])
+        txt = "```{}```".format('\n'.join(["{:>2}.{:>16} {}".format(i+1, summ_name[i], j[1][1])
                                 for i,j in enumerate(lst)]))
         await message.channel.send(txt)
 
