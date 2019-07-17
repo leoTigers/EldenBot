@@ -86,7 +86,6 @@ async def on_message(m):
                                colour=0xFF0000).set_footer(text="command : " + m.content,icon_url=m.author.avatar_url)
             await m.channel.send(embed=em)
     if m.content.startswith(f"<@{client.user.id}> play"):
-        print(m.content.split(' ')[2:])
         args = m.content.split(' ')[2:]
         await command.cmd_music(*args, message=m, member=m.author, force=False, cmd=None,
                                 client=client, channel=m.channel, guild=m.guild)

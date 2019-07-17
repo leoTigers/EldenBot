@@ -7,7 +7,7 @@ from decorator import only_owner
 LEAGUE_SCORE = {"IRON": 0, "BRONZE":500, "SILVER":1000, "GOLD":1500, "PLATINUM":2000,
                 "DIAMOND":2500, "MASTER":2600, "GRANDMASTER": 2600, "CHALLENGER":2600}
 DIV_SCORE = {"IV":0,"III":110,"II":220,"I":330}
-QUEUE = {"RANKED_FLEX_SR":"FlexQ", "RANKED_SOLO_5x5":"SoloQ", "RANKED_FLEX_TT":"3v3TT"}
+QUEUE = {"RANKED_FLEX_SR":"FlexQ", "RANKED_SOLO_5x5":"SoloQ", "RANKED_FLEX_TT":"3v3TT", "RANKED_TFT":"TFT"}
 with open("private/rgapikey") as key:
     panth = pantheon.Pantheon("euw1", key.read(), True)
 
@@ -73,8 +73,8 @@ class CmdLolScore:
         await msg.edit(content="{} scores ont été mis à jour".format(len(dic)))
 
     async def cmd_ladder(self, *args, message, **_):
-        if not args or args[0] not in ['SoloQ', 'FlexQ', '3v3TT']:
-            await message.channel.send("Préciser la queue [SoloQ/FlexQ/3v3TT]")
+        if not args or args[0] not in ['SoloQ', 'FlexQ', '3v3TT', 'TFT']:
+            await message.channel.send("Préciser la queue [SoloQ/FlexQ/3v3TT/TFT]")
             return
         lst = await get_leader(message, args[0])
         lst = lst[:20]
@@ -108,7 +108,7 @@ class CmdLolScore:
         score = load_score()
         score[data['id']] = await get_ranked_score(data['id'])
         txt = ""
-        for i in ["SoloQ", "FlexQ", "3v3TT"]:
+        for i in ["SoloQ", "FlexQ", "3v3TT", "TFT"]:
             lead = await get_leaderboard_place(message, data['id'], i)
             if lead:
                 txt += "``{}: {} {:>2}/{}``\n".format(i, score[str(data['id'])][i][1], *lead)
