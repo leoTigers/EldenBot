@@ -54,7 +54,7 @@ if __name__ == '__main__':
     command = Command()
 
 logging.basicConfig(level=logging.INFO)
-client = discord.Client()
+client = discord.Client(activity=discord.Game("type /help for commands"))
 
 #wb = gspread.authorize("token_google").open_by_key('1v-MzfsOmmCQNwWFHl86UVrf3lIm5QPitRiJeA4ISIPw')
 #wb = wb.get_worksheet(0)
