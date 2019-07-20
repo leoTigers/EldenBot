@@ -258,17 +258,18 @@ class CmdRgapi:
         await msg.edit(embed=em)
 
 async def format_player_info(data: dict):
-    player = "{} ``{}{}``".format(CHAMP_ID_TO_EMOJI[str(data["championId"])], data['summonerName'][:10], '…' if len(data['summonerName']) > 10 else "")
-
     pos = await panth.getLeaguePosition(data['summonerId'])
-    d = [(f"{SHORT_LEAGUE[i['tier']]} {i['rank']}", LEAGUE_SCORE[i['tier']] + DIV_SCORE[i['rank']]) for i in pos]
-    if not d:
-        league_str = ""
-    else:
-        league_str, _ = max(d, key=lambda x: x[1])
-    league = "{} {}".format(''.join([RUNE_ID_TO_EMOJI[str(i)] for i in data['perks']['perkIds'][:6]]), league_str)
+    d = [(f"{i['tier'].title()} {i['rank']}", LEAGUE_SCORE[i['tier']] + DIV_SCORE[i['rank']]) for i in pos]
+    if not d: league_str = ""
+    else: league_str, _ = max(d, key=lambda x: x[1])
+    player = "{} ``{}``\n{} {}".format(CHAMP_ID_TO_EMOJI[str(data["championId"])], data['summonerName'], CHAMP_NONE_EMOJI, league_str)
+
+
+    runes = "{}|{}\n{}".format(RUNE_ID_TO_EMOJI[str(data['perks']['perkIds'][0])],
+                               ''.join([RUNE_ID_TO_EMOJI[str(i)] for i in data['perks']['perkIds'][:4]]),
+                               ''.join([RUNE_ID_TO_EMOJI[str(i)] for i in data['perks']['perkIds'][4:6]]))
 
     champ_masteries = await panth.getChampionMasteriesByChampionId(data['summonerId'], data['championId'])
     a = lambda nb: [nb[::-1][i*3:(i+1)*3][::-1] for i in range((len(nb)+2)//3)][::-1]
     score = "{} {}".format(MASTERIES_TO_EMOJI[str(champ_masteries['championLevel'])], ' '.join(a(str(champ_masteries['championPoints']))))
-    return (player, league, score)
+    return (player, runes, score)
