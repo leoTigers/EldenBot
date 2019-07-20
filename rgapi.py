@@ -1,6 +1,6 @@
 from pantheon import pantheon
 from decorator import not_offical_serv, only_owner
-from constant import CHAMP_ID_TO_EMOJI, RUNE_ID_TO_EMOJI, MASTERIES_TO_EMOJI, CHAMP_NONE_EMOJI
+from constant import CHAMP_ID_TO_EMOJI, RUNE_ID_TO_EMOJI, MASTERIES_TO_EMOJI, CHAMP_NONE_EMOJI, INVISIBLE_EMOJI
 from lol_score import LEAGUE_SCORE, DIV_SCORE
 import requests
 import asyncio
@@ -262,7 +262,7 @@ async def format_player_info(data: dict):
     d = [(f"{i['tier'].title()} {i['rank']}", LEAGUE_SCORE[i['tier']] + DIV_SCORE[i['rank']]) for i in pos]
     if not d: league_str = ""
     else: league_str, _ = max(d, key=lambda x: x[1])
-    player = "{} ``{}``\n{} {}\n".format(CHAMP_ID_TO_EMOJI[str(data["championId"])], data['summonerName'], CHAMP_NONE_EMOJI, league_str)
+    player = "{} ``{}``\n{} {}\n".format(CHAMP_ID_TO_EMOJI[str(data["championId"])], data['summonerName'], INVISIBLE_EMOJI, league_str)
 
 
     runes = "{}|{}\n{}\n".format(RUNE_ID_TO_EMOJI[str(data['perks']['perkIds'][0])],
@@ -271,6 +271,6 @@ async def format_player_info(data: dict):
 
     champ_masteries = await panth.getChampionMasteriesByChampionId(data['summonerId'], data['championId'])
     a = lambda nb: [nb[::-1][i*3:(i+1)*3][::-1] for i in range((len(nb)+2)//3)][::-1]
-    score = "{} {}\n\n".format(MASTERIES_TO_EMOJI[str(champ_masteries['championLevel'])], ' '.join(a(str(champ_masteries['championPoints']))))
+    score = "{} {}\n{}\n".format(MASTERIES_TO_EMOJI[str(champ_masteries['championLevel'])], ' '.join(a(str(champ_masteries['championPoints']))), INVISIBLE_EMOJI)
     print(player, runes, score)
     return (player, runes, score)
