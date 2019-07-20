@@ -247,11 +247,11 @@ class CmdRgapi:
         team2 = await asyncio.gather(*(format_player_info(participant) for participant in spec_data["participants"] if participant["teamId"] == 200))
 
         em = discord.Embed(title=f"Game de {summ_info['name']}")
-        em.add_field(name="Équipe bleu", value=f"Champions bannis :\n{' '.join([CHAMP_ID_TO_EMOJI[str(i['championId'])] if i['championId'] != '-1' else CHAMP_NONE_EMOJI for i in spec_data['bannedChampions'] if i['teamId'] == 100])}", inline=False)
+        em.add_field(name="Équipe bleu", value=f"Champions bannis :\n{' '.join([(CHAMP_ID_TO_EMOJI[str(i['championId'])] if str(i['championId']) != '-1' else CHAMP_NONE_EMOJI) for i in spec_data['bannedChampions'] if i['teamId'] == 100])}", inline=False)
         for i, name in enumerate(["Invocateurs", "Runes et Classement", "Masteries"]):
             em.add_field(name=name, value='\n'.join([player[i] for player in team1]), inline=True)
 
-        em.add_field(name="Équipe rouge", value=f"Champions bannis :\n{' '.join([CHAMP_ID_TO_EMOJI[str(i['championId'])] if i['championId'] != '-1' else CHAMP_NONE_EMOJI for i in spec_data['bannedChampions'] if i['teamId'] == 200])}", inline=False)
+        em.add_field(name="Équipe rouge", value=f"Champions bannis :\n{' '.join([(CHAMP_ID_TO_EMOJI[str(i['championId'])] if str(i['championId']) != '-1' else CHAMP_NONE_EMOJI) for i in spec_data['bannedChampions'] if i['teamId'] == 200])}", inline=False)
         for i, name in enumerate(["Invocateurs", "Runes et Classement", "Masteries"]):
             em.add_field(name=name, value='\n'.join([player[i] for player in team2]), inline=True)
 
