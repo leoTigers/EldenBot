@@ -86,7 +86,6 @@ class CmdLolScore:
 
     async def cmd_info(self, *args, message, member, **_):
         summ_id, name = None, None
-        print(args, bool(args))
         if not args:
             verif = load_verif()
             print(str(member.id), verif, str(member.id) in verif)
@@ -96,7 +95,6 @@ class CmdLolScore:
                 name = member.display_name
         else:
             name = " ".join(args)
-        print(summ_id, bool(summ_id))
         if summ_id:
             data = await panth.getSummoner(summ_id)
         else:

@@ -1,11 +1,26 @@
 from pantheon import pantheon
 from decorator import not_offical_serv, only_owner
+from constant import CHAMP_ID_TO_EMOJI, RUNE_ID_TO_EMOJI, MASTERIES_TO_EMOJI
+from lol_score import LEAGUE_SCORE, DIV_SCORE
 import requests
 import asyncio
 import discord
 import time
 
+from verif import load_verif
+
 SEASON = 13
+SHORT_LEAGUE = {
+    "IRON": "Iron",
+    "BRONZE": "Bronze",
+    "SILVER": "Silver",
+    "GOLD": "Gold",
+    "PLATINUM": "Plat",
+    "DIAMOND": "Diam",
+    "MASTER": "Master",
+    "GRANDMASTER": "G Mast",
+    "CHALLENGER": "Chall"
+}
 
 with open("private/rgapikey") as key:
     panth = pantheon.Pantheon("euw1", key.read(), True)
@@ -205,3 +220,55 @@ class CmdRgapi:
             mt += y
         em = discord.Embed(title="Afk Meter :",description="Sur les " +str(len(matches)) +" dernières parties\n" +summonerName +" a AFK **" +str(nb) +"** games pour un total de **" +str(mt) +"** minutes\n\n" +txt,colour=colour)
         await msg.edit(embed=em.set_author(name=summonerName, icon_url=icon))
+
+
+    async def cmd_gameinfo(self, *args, member, channel, **_):
+        summ_id, name = None, None  # type: str
+        if not args:
+            verif = load_verif()
+            if str(member.id) in verif:
+                summ_id = verif[str(member.id)]
+            else:
+                name = member.display_name
+        else:
+            name = " ".join(args)
+        if summ_id:
+            summ_info = await panth.getSummoner(summ_id)
+        else:
+            summ_info = await panth.getSummonerByName(name)
+        if not summ_info:
+            await channel.send("Impossible de trouver l'invocateur")
+            return None
+        spec_data = await panth.getCurrentGame(summ_info["id"])
+        if not spec_data:
+            return channel.send("L'invocateur n'est pas en jeu actuellement")
+        msg = await channel.send(embed=discord.Embed(title="Récupération des informations ..."))
+        team1 = await asyncio.gather(*(format_player_info(participant) for participant in spec_data["participants"] if participant["teamId"] == 100))
+        team2 = await asyncio.gather(*(format_player_info(participant) for participant in spec_data["participants"] if participant["teamId"] == 200))
+
+        em = discord.Embed(title=f"Game de {summ_info['name']}")
+        em.add_field(name="Équipe bleu", value=f"Champions bannis :\n{' '.join([CHAMP_ID_TO_EMOJI[str(i['championId'])] for i in spec_data['bannedChampions'] if i['teamId'] == 100])}", inline=False)
+        for i, name in enumerate(["Invocateurs", "Runes et Classement", "Masteries"]):
+            em.add_field(name=name, value='\n'.join([player[i] for player in team1]), inline=True)
+
+        em.add_field(name="Équipe rouge", value=f"Champions bannis :\n{' '.join([CHAMP_ID_TO_EMOJI[str(i['championId'])] for i in spec_data['bannedChampions'] if i['teamId'] == 200])}", inline=False)
+        for i, name in enumerate(["Invocateurs", "Runes et Classement", "Masteries"]):
+            em.add_field(name=name, value='\n'.join([player[i] for player in team2]), inline=True)
+
+        await msg.edit(embed=em)
+
+async def format_player_info(data: dict):
+    player = "{} ``{}{}``".format(CHAMP_ID_TO_EMOJI[str(data["championId"])], data['summonerName'][:10], '…' if len(data['summonerName']) > 10 else "")
+
+    pos = await panth.getLeaguePosition(data['summonerId'])
+    d = [(f"{SHORT_LEAGUE[i['tier']]} {i['rank']}", LEAGUE_SCORE[i['tier']] + DIV_SCORE[i['rank']]) for i in pos]
+    if not d:
+        league_str = ""
+    else:
+        league_str, _ = max(d, key=lambda x: x[1])
+    league = "{} {}".format(''.join([RUNE_ID_TO_EMOJI[str(i)] for i in data['perks']['perkIds'][:6]]), league_str)
+
+    champ_masteries = await panth.getChampionMasteriesByChampionId(data['summonerId'], data['championId'])
+    a = lambda nb: [nb[::-1][i*3:(i+1)*3][::-1] for i in range((len(nb)+2)//3)][::-1]
+    score = "{} {}".format(MASTERIES_TO_EMOJI[str(champ_masteries['championLevel'])], ' '.join(a(str(champ_masteries['championPoints']))))
+    return (player, league, score)

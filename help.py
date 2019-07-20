@@ -41,6 +41,7 @@ helper = {
         "/force": "``commande`` permet de bypass les check de permission",
         "/python": "``code`` éxecute le code python donné dans le bot",
         "/bash": "``bash`` éxecute le code donné dans bash",
+        "/importverif": "Importe les comptes vérifié sur un serveur officiel"
     },
     "Useless": {
         '/thanossnap': "Affiche un simulateur de thanos snap sur le serveur",
