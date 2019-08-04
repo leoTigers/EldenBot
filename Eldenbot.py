@@ -32,9 +32,18 @@ if __name__ == '__main__':
     class Command(CmdRoll, CmdLatex, CmdRgapi, CmdLink, CmdDeleteAllMessage,
                   CmdVerif, CmdLolScore, CmdMusic, CmdModeration, CmdLg,
                   CmdMoney, CmdInfos, CmdUseless, CmdHelp):
+
+        sleep = False
+
+        @only_owner
+        async def cmd_sleep(self, *_, channel, **__):
+            self.sleep = not self.sleep
+            await channel.send("switch sleep to {}".format(self.sleep))
+
         @only_owner
         async def cmd_kill(self, *args, **_):
             os.kill(os.getpid(), signal.SIGKILL)
+
         @only_owner
         async def cmd_bash(self, *args, message, channel, member, guild, client, force, cmd, **_):
             r = subprocess.run(' '.join(args), shell=True, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, universal_newlines=True)
@@ -66,6 +75,8 @@ async def on_ready():
 @client.event
 async def on_message(m):
     if m.content.startswith('/') :#and m.author == client.user:
+        if command.sleep and m.content != '/sleep':
+            return
         member = m.author
         cmd = m.content.split(" ")[0][1:].lower()
         force = True if cmd == "force" and member.id == 384274248799223818 else False

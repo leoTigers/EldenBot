@@ -36,6 +36,7 @@ helper = {
         '/br ou /rb' : "``x[+r]`` Lancer de dé de bloodlust, lance x dé(s) 6 avec r risque.",
     },
     "SuperAdmin": {
+        "/sleep": "Empeche le bot de réagir aux commandes jusqu'au prochain /sleep",
         "/kill": "Envoie un SIGKILL au bot (j'aime pas trop ce moment là)",
         "/refreshallscore": "Refresh tout les scores pour le /info et /ladder de la RGAPI",
         "/force": "``commande`` permet de bypass les check de permission",
