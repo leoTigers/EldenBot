@@ -41,7 +41,7 @@ async def on_message(m):
                            client=client, channel=m.channel, guild=m.guild)
         except BotError:
             error = traceback.format_exc().split('\n')[-1] or traceback.format_exc().split('\n')[-2]
-            await m.channel.send(error)
+            await m.channel.send(error[15:])
         except Exception:
             em = discord.Embed(title="Oh no !  😱",
                                description="Une erreur s'est produite lors de l'éxécution de la commande\n" + msg("- [FATAL ERROR]\n" + traceback.format_exc()),
