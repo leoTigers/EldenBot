@@ -5,6 +5,8 @@ import os
 import re
 import asyncio
 
+from util.exception import NotFound, InvalidArgs
+
 
 # Suppress noise about console usage from errors
 youtube_dl.utils.bug_reports_message = lambda: ''
@@ -90,11 +92,13 @@ class MusicClient:
             option = {**ffmpeg_options, **{'options':ffmpeg_options['options'] + ' -ss {}'.format(song.ss)}}
         else:
             option = ffmpeg_options
-        player = await YTDLSource.from_url(song.url, loop=self.client.loop, stream=True, option=option)
+        try:
+            player = await YTDLSource.from_url(song.url, loop=self.client.loop, stream=True, option=option)
+        except youtube_dl.utils.DownloadError:
+            return await self.notif_channel.send("Une erreur s'est produite lors du téléchargement de la musique, le propriétaire a surement bloqué le visionage extérieur.")
         after = lambda e: asyncio.run_coroutine_threadsafe(self.play_next_music(), self.client.loop) if not e else print("ERR:", e)
         await asyncio.sleep(1)
         self.voice_client.play(player, after=after)
-
         em = discord.Embed(title=song.title, description="now playing",
                            url=song.url)
         em.set_image(url=song.image)
@@ -109,12 +113,17 @@ class MusicClient:
         del self.queue[0]
         return await self.stream(song)
 
-    async def add_to_queue(self, args):
+    async def add_to_queue(self, args, notif=True):
         song = Song(args[0], ss=args[1] if len(args) >= 2 else None)
         self.queue.append(song)
-        await self.notif_channel.send("ajouté à la queue:\n{}".format(song))
+        if notif:
+            await self.notif_channel.send("ajouté à la queue:\n{}".format(song))
         if not self.voice_client.is_playing():
             await self.play_next_music()
+        return song
+
+    async def bulk_add_to_queue(self, args):
+        pass
 
     async def display_queue(self, channel):
         await channel.send("Queue :\n{}".format(
@@ -128,10 +137,8 @@ class MusicClient:
 class CmdMusic:
     async def cmd_music(self, *args, message, channel, force, client, **_):
         global clients
-        print(args)
         if not args:
-            await channel.send("Aucun argument reçu.")
-            return
+            raise InvalidArgs("Aucun argument reçu.")
         music_client = await get_client(message, client)
         if args[0] == "disconnect":
             await music_client.disconnect()
@@ -160,14 +167,13 @@ class CmdMusic:
         elif args[0] == "search":
             music = await search_music('+'.join(args[1:]))
             if not music:
-                return await channel.send("J'ai trouvé aucune musique portant ce nom :(")
+                raise NotFound("J'ai trouvé aucune musique portant ce nom :(")
             await music_client.add_to_queue([music])
         else:
             if not re.match(r".*www\.youtube\.com/watch\?v=.*", args[0]):
                 music = await search_music('+'.join(args))
                 if not music:
-                    return await channel.send("J'ai trouvé aucune musique portant ce nom :(")
-                print(music)
+                    raise NotFound("J'ai trouvé aucune musique portant ce nom :(")
                 return await music_client.add_to_queue([music])
             await music_client.add_to_queue(args)
 

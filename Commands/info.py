@@ -1,5 +1,6 @@
 from datetime import datetime
-from function import get_member
+from util.function import get_member
+from util.exception import NotFound
 import discord
 
 def format_time(x):
@@ -10,7 +11,7 @@ class CmdInfos:
         if args:
             member = get_member(guild, ' '.join(args))
             if not member:
-                return await channel.send("Membre non toruvé :(")
+                raise NotFound("Membre non toruvé :(")
         em = discord.Embed(title=member.display_name, colour=member.colour)
         em.add_field(name="Nom", value=member.name)
         em.add_field(name="Discriminator", value="#" + member.discriminator)

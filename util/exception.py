@@ -9,3 +9,9 @@ class CritialError(BotError):
 
 class InvalidArgs(BotError):
     """represent a error when a user try a command"""
+
+class ALEDException(BotError):
+    """Error that should never occurate"""
+
+class NotFound(BotError):
+    """NotFound"""

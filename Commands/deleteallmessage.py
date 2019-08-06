@@ -1,9 +1,5 @@
-from Eldenbot import client
-import discord
-import asyncio
-
 class CmdDeleteAllMessage:
-    async def cmd_mdeleteallmessage(self, member, channel, force, **_):
+    async def cmd_mdeleteallmessage(self, member, channel, force, client, **_):
         if not member.permissions_in(channel).manage_channels and not force:
             await channel.send("Tu as pas le droit de faire ça (nécésite la permission : Gérer le canal.)")
             return False

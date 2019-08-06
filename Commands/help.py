@@ -1,4 +1,5 @@
 import discord
+from util.exception import NotFound
 
 helper = {
     "Moderation": {
@@ -13,6 +14,7 @@ helper = {
     },
     "Music": {
         "/music {lien Youtube}" : "Ajoute la musique à la queue",
+        "/music search": "``{query}`` Checrche sur Youtube et joue le premier résultat trouvé",
         "/music skip" : "Passe à la musique suivante",
         "/music pause" : "met en pause la musique",
         "/music resume" : "enlève la pause de la musique",
@@ -73,5 +75,5 @@ class CmdHelp:
                     em.add_field(name=f"**{k}**", value=v, inline=False)
             await channel.send(embed=em)
         else:
-            await channel.send("Erreur: J'ai pas trouvé le module dans mon manuel :(")
+            raise NotFound("Erreur: J'ai pas trouvé le module dans mon manuel :(")
             

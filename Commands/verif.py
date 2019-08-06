@@ -1,7 +1,7 @@
 import json
 import discord
 from pantheon import pantheon
-from decorator import only_owner
+from util.decorator import only_owner
 
 with open("private/rgapikey") as key:
     panth = pantheon.Pantheon("euw1", key.read(), True)

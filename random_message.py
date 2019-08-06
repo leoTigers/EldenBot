@@ -43,11 +43,11 @@ DAILY_CLAIM = [
 async def random_message(client, message):
     if "boop" in message.content.lower():
         await message.channel.send(message.author.mention + " " + random.choice(BOOP))
-        return(None)
+        return
     for msg in BONJOUR:
         if msg in message.content.lower():
             await message.channel.send(message.author.mention + " " + random.choice(BONJOUR))
-            return(None)
+            return
     else:
         await message.channel.send(random.choice(RANDOM_REPLY))
 

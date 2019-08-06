@@ -1,6 +1,6 @@
 import json
-from decorator import can_manage_role
-from exception import InvalidArgs
+from util.decorator import can_manage_role
+from util.exception import InvalidArgs
 
 with open('data/openrole') as fd:
     openrole = json.load(fd)

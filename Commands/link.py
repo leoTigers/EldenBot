@@ -1,7 +1,7 @@
 import json
 import discord
 from random_message import *
-from decorator import *
+from util.decorator import only_owner
 
 def load_link_file():
     try:

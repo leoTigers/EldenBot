@@ -1,6 +1,5 @@
 import random
 import discord
-import asyncio
 
 def roll_dice(nb, face):
     l = []
@@ -29,7 +28,7 @@ class CmdRoll:
         await message.channel.send(embed=discord.Embed(title="Lancé de dés",description="{} a lancé {} dé {}{} et a obtenu :\n\n**{}**\n\nTotal : **{}**".format(v1,str(d),str(f),v2,v3,str(sum(r) + bonus)),colour=message.author.color).set_author(name=message.author.name,icon_url=message.author.avatar_url))
         try:
             await message.delete()
-        except:
+        except discord.HTTPException:
             pass
 
     async def cmd_bloodlustroll(self, *args, message, **_):
@@ -44,7 +43,7 @@ class CmdRoll:
         await message.channel.send(embed=discord.Embed(title="Lancé de dés (Bloodlust)",description="{} a lancé {} dés avec {} risques, il a obtenu :\n\n**{}**\n\nTotal : **{}** (Qualités : **{}**)".format(message.author.name,str(d),str(r),", ".join([str(i) for i in l]),sum(l),str(len([i for i in l if i%2 == 0])+r)),colour=message.author.color).set_author(name=message.author.name,icon_url=message.author.avatar_url))
         try:
             await message.delete()
-        except:
+        except discord.HTTPException:
             pass
 
     async def cmd_r(self, *args, **kwargs): await self.cmd_roll(*args, **kwargs)

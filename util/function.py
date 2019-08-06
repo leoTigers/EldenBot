@@ -1,5 +1,7 @@
 import discord
 import re
+import json
+from util.exception import ALEDException
 
 mention_regex = re.compile(r"(?<=^<@)\d+(?=>$)")
 
@@ -30,3 +32,17 @@ def get_member(guild, name):
     if name.isdigit():
         return guild.get_member(int(name))
     return None
+
+def load_json_file(file):
+    try:
+        with open(file, 'r') as fd:
+            return json.loads(fd.read())
+    except:
+        raise ALEDException(f"Impossible de lire le fichier {file}, le fichier a soit été déplacé, supprimé ou comrompu !")
+
+def write_json_file(file, obj):
+    try:
+        with open(file, 'w') as fd:
+            json.dump(obj, fd)
+    except:
+        raise ALEDException(f"Impossible d'écrire le fichier {file} !")

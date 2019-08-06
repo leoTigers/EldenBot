@@ -2,7 +2,9 @@ import discord
 import json
 import asyncio
 from pantheon import pantheon
-from decorator import only_owner
+from util.decorator import only_owner
+from util.exception import Error, InvalidArgs, NotFound, ALEDException
+from util.function import load_json_file, write_json_file
 
 LEAGUE_SCORE = {"IRON": 0, "BRONZE":500, "SILVER":1000, "GOLD":1500, "PLATINUM":2000,
                 "DIAMOND":2500, "MASTER":2600, "GRANDMASTER": 2600, "CHALLENGER":2600}
@@ -12,24 +14,20 @@ with open("private/rgapikey") as key:
     panth = pantheon.Pantheon("euw1", key.read(), True)
 
 def load_verif():
-    with open("data/summoners", 'r') as fd:
-        return json.loads(fd.read())
+    return load_json_file("data/summoners")
 
 def load_score():
-    with open("data/rank_score", 'r') as fd:
-        return json.loads(fd.read())
+    return load_json_file("data/rank_score")
 
 def save_score(dic):
-    with open("data/rank_score", 'w') as fd:
-        fd.write(json.dumps(dic))
+    return write_json_file("data/rank_score", dic)
 
 async def get_leader(message, rank):
     scores = load_score()
     verif = load_verif()
     guild = message.guild
     if not guild:
-        await message.channel.send("Impoissble de récupérer le classement du serveur")
-        return None
+        raise Error("Impoissble de récupérer le classement du serveur")
     guildv = [str(verif[str(member.id)]) for member in guild.members if str(member.id) in verif.keys()]
     l = [(player, score[rank]) for player, score in scores.items()
             if player in guildv and rank in score.keys()]
@@ -46,8 +44,7 @@ async def get_leaderboard_place(message, summ_id, rank):
     verif = load_verif()
     guild = message.guild
     if not guild:
-        await message.channel.send("Impoissble de récupérer le classement du serveur")
-        return None
+        raise Error("Impoissble de récupérer le classement du serveur")
     guildv = [str(verif[str(member.id)]) for member in guild.members if str(member.id) in verif.keys()]
     l = [(player, score[rank][0]) for player, score in scores.items()
             if player in guildv and rank in score.keys()]
@@ -74,8 +71,7 @@ class CmdLolScore:
 
     async def cmd_ladder(self, *args, message, **_):
         if not args or args[0] not in ['SoloQ', 'FlexQ', '3v3TT', 'TFT']:
-            await message.channel.send("Préciser la queue [SoloQ/FlexQ/3v3TT/TFT]")
-            return
+            raise InvalidArgs("Préciser la queue [SoloQ/FlexQ/3v3TT/TFT]")
         lst = await get_leader(message, args[0])
         lst = lst[:20]
         tasks = [panth.getSummoner(summ_id) for summ_id in [i[0] for i in lst]]
@@ -100,8 +96,7 @@ class CmdLolScore:
         else:
             data = await panth.getSummonerByName(name)
         if not data:
-            await message.channel.send("Impossible de trouver l'invocateur")
-            return None
+            raise NotFound("Impossible de trouver l'invocateur")
         icon = "http://ddragon.canisback.com/latest/img/profileicon/"+str(data['profileIconId'])+".png"
         score = load_score()
         score[data['id']] = await get_ranked_score(data['id'])

@@ -1,5 +1,3 @@
-import io
-import os
 import requests
 import discord
 from PIL import Image

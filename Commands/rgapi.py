@@ -1,13 +1,13 @@
 from pantheon import pantheon
-from decorator import not_offical_serv, only_owner
+from util.decorator import not_offical_serv, only_owner
+from util.exception import InvalidArgs, NotFound
 from constant import CHAMP_ID_TO_EMOJI, RUNE_ID_TO_EMOJI, MASTERIES_TO_EMOJI, CHAMP_NONE_EMOJI, INVISIBLE_EMOJI
-from lol_score import LEAGUE_SCORE, DIV_SCORE
-import requests
+from .lol_score import LEAGUE_SCORE, DIV_SCORE
 import asyncio
 import discord
 import time
 
-from verif import load_verif
+from .verif import load_verif
 
 SEASON = 13
 SHORT_LEAGUE = {
@@ -97,6 +97,8 @@ class CmdRgapi:
         if not args : summonerName = member.name
         else : summonerName = " ".join(args)
         accountId, summonerId, iconId = await getSummoner(summonerName)
+        if not accountId:
+            raise InvalidArgs("Invocateur non trouvé")
         result = {}
         msg = await message.channel.send("Récupération de l'historique")
         matchs = await getLastYearHistory(accountId)
@@ -137,12 +139,10 @@ class CmdRgapi:
         else : summonerName = "".join(args)
         accountId, summonerId, iconId = await getSummoner(summonerName)
         if not accountId or not summonerId:
-            await message.channel.send("Invocateur : {} non trouvé".format(summonerName))
-            return None
+            raise NotFound("Invocateur : {} non trouvé".format(summonerName))
         league = await getLeagueSoloQ(summonerId)
         if not league:
-            await message.channel.send("Cet invocateur n'est pas classé en SoloQ (et il y a que ça qui compte)")
-            return None
+            return await message.channel.send("Cet invocateur n'est pas classé en SoloQ (et il y a que ça qui compte)")
         msg = await message.channel.send("Récupération des données en cours ...")
         dic1 = {"BRONZE":1,"SILVER":1.5,"GOLD":2.2,"PLATINUM":3,"DIAMOND":4,"MASTER":4.5,"CHALLENGER":5.5}
         dic2 = {"V":0.0, "IV":0.1, "III":0.3, "II":0.4, "I":0.5}
@@ -189,8 +189,7 @@ class CmdRgapi:
         else : summonerName = "".join(args)
         accountId, summonerId, iconId = await getSummoner(summonerName)
         if not accountId :
-            await message.channel.send("Invocateur non trouvé : {}".format(summonerName))
-            return None
+            raise NotFound("Invocateur non trouvé : {}".format(summonerName))
         try : colour = message.guild.get_member_named(summonerName).colour
         except : colour = 0xC0C0C0
         icon = "http://ddragon.canisback.com/latest/img/profileicon/"+str(iconId)+".png"
@@ -232,16 +231,17 @@ class CmdRgapi:
                 name = member.display_name
         else:
             name = " ".join(args)
-        if summ_id:
-            summ_info = await panth.getSummoner(summ_id)
-        else:
-            summ_info = await panth.getSummonerByName(name)
-        if not summ_info:
-            await channel.send("Impossible de trouver l'invocateur")
-            return None
-        spec_data = await panth.getCurrentGame(summ_info["id"])
-        if not spec_data:
-            return channel.send("L'invocateur n'est pas en jeu actuellement")
+        try:
+            if summ_id:
+                summ_info = await panth.getSummoner(summ_id)
+            else:
+                summ_info = await panth.getSummonerByName(name)
+        except:
+            raise NotFound("Impossible de trouver l'invocateur")
+        try:
+            spec_data = await panth.getCurrentGame(summ_info["id"])
+        except :
+            return await channel.send("L'invocateur n'est pas en jeu actuellement")
         msg = await channel.send(embed=discord.Embed(title="Récupération des informations ..."))
         team1 = await asyncio.gather(*(format_player_info(participant) for participant in spec_data["participants"] if participant["teamId"] == 100))
         team2 = await asyncio.gather(*(format_player_info(participant) for participant in spec_data["participants"] if participant["teamId"] == 200))
@@ -252,7 +252,7 @@ class CmdRgapi:
             em.add_field(name=name, value='\n'.join([player[i] for player in team1]), inline=True)
 
         em.add_field(name="Équipe rouge", value=f"Champions bannis :\n{' '.join([(CHAMP_ID_TO_EMOJI[str(i['championId'])] if str(i['championId']) != '-1' else CHAMP_NONE_EMOJI) for i in spec_data['bannedChampions'] if i['teamId'] == 200])}", inline=False)
-        for i, name in enumerate(["Invocateurs", "Runes et Classement", "Masteries"]):
+        for i, name in enumerate(["Invocateurs", "Runes", "Masteries"]):
             em.add_field(name=name, value='\n'.join([player[i] for player in team2]), inline=True)
 
         await msg.edit(embed=em)
@@ -277,6 +277,6 @@ async def format_player_info(data: dict):
     except:
         champ_masteries = {'championLevel': 0, 'championPoints': 0}
     a = lambda nb: [nb[::-1][i*3:(i+1)*3][::-1] for i in range((len(nb)+2)//3)][::-1]
-    score = "{} {}\n{} {} points\n".format(MASTERIES_TO_EMOJI.get(str(champ_masteries['championLevel']), INVISIBLE_EMOJI), champ_masteries['championLevel'], INVISIBLE_EMOJI, ' '.join(a(str(champ_masteries['championPoints']))))
+    score = "{} Level {}\n{} {} points\n".format(MASTERIES_TO_EMOJI.get(str(champ_masteries['championLevel']), INVISIBLE_EMOJI), champ_masteries['championLevel'], INVISIBLE_EMOJI, ' '.join(a(str(champ_masteries['championPoints']))))
     print(player, runes, score)
     return (player, runes, score)

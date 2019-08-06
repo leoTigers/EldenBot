@@ -1,6 +1,7 @@
 import discord
 import datetime
-from decorator import can_manage_message
+from util.decorator import can_manage_message
+from util.exception import InvalidArgs
 
 MOD_DELETED = ("Votre message a été supprimé par {} pour la raison suivante :"
                + "\n{}\nRappel du message :\n{}")
@@ -23,8 +24,7 @@ class CmdModeration:
     async def cmd_mdelete(self, *args, message, channel, member, **_):
         """/mdelete {message_id} [!][*raison]"""
         if not args:
-            await channel.send("Pas d'argument reçu")
-            return
+            raise InvalidArgs("Pas d'argument reçu")
         msg = await channel.get_message(int(args[0]))
         await msg.delete()
         await message.delete()
@@ -39,8 +39,7 @@ class CmdModeration:
         """/mmove {message_id} {channel} [!][*raison]"""
         await message.delete()
         if not args:
-            await chanel.send("Pas d'argument reçu")
-            return
+            raise InvalidArgs("Pas d'argument reçu")
         msg = await channel.get_message(int(args[0]))
         target = client.get_channel(int(args[1]))
         reason = None
@@ -56,8 +55,7 @@ class CmdModeration:
         """/mmoveafter {message_id} {channel} [!][*raison]"""
         await message.delete()
         if not args:
-            await channel.send("Pas d'argument reçu")
-            return
+            raise InvalidArgs("Pas d'argument reçu")
         msg = await channel.get_message(int(args[0]))
         target = client.get_channel(int(args[1]))
         reason = None
