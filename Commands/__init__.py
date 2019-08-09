@@ -6,6 +6,7 @@ import signal
 import subprocess
 from util.decorator import only_owner
 
+from .JDR import CmdJdr
 from .deleteallmessage import CmdDeleteAllMessage
 from .help import CmdHelp
 from .info import CmdInfos
@@ -24,7 +25,8 @@ from LoupGarou.lg import CmdLg
 
 class Command(CmdRoll, CmdLatex, CmdRgapi, CmdLink, CmdDeleteAllMessage,
               CmdVerif, CmdLolScore, CmdMusic, CmdModeration, CmdLg,
-              CmdMoney, CmdInfos, CmdUseless, CmdHelp):
+              CmdMoney, CmdInfos, CmdUseless, CmdHelp,
+              CmdJdr):
     sleep = False
 
     @only_owner
