@@ -143,3 +143,22 @@ class CmdJdrMith:
 
     async def cmd_td(self, *args, **kwargs): await self.cmd_takedamage(*args, **kwargs)
     async def cmd_hd(self, *args, **kwargs): await self.cmd_takedamage(*args, **kwargs, heal=True)
+
+    async def cmd_gmroll(self, *args, message, member, client,**_):
+        if not args or not args[0]:
+            args = "1d100"
+        expr = "".join(args)
+        r = roll(expr)
+        em = discord.Embed(
+            title="Lancé de dés",
+            description=f"{member.mention} {r.intro_sentence()}\n\n{r.format_results()}\n\nTotal : **{r.total}**",
+            colour=member.colour
+        ).set_footer(text=message.content).set_author(name=member.name, icon_url=member.avatar_url)
+        await message.channel.send(embed=em)
+        await client.get_user(203934874204241921).send(embed=em)
+        try:
+            await message.delete()
+        except discord.HTTPException:
+            pass
+
+    async def cmd_gr(self, *args, **kwargs): await self.cmd_gmroll(*args, **kwargs)

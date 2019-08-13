@@ -79,6 +79,8 @@ def parse_expr(expr : str) -> Tuple[List[Dice], int]:
 
 class CmdRoll:
     async def cmd_roll(self, *args, message, member, **_):
+        if not args or not args[0]:
+            args = "1d100"
         expr = "".join(args)
         r = roll(expr)
         await message.channel.send(embed=discord.Embed(
