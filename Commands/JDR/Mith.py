@@ -114,7 +114,7 @@ class CmdJdrMith:
             damage = -damage
 
         wsh = gc.open_by_key(CHAR_SHEET[str(target.id)]).sheet1
-        cell_list = wsh.range('C13:C14')
+        cell_list = wsh.range('K3:K4')
         new_hp = int(cell_list[0].value) - damage
         if new_hp > int(cell_list[1].value):
             new_hp = int(cell_list[1].value)
