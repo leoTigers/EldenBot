@@ -21,6 +21,13 @@ SHORT_LEAGUE = {
     "GRANDMASTER": "G Mast",
     "CHALLENGER": "Chall"
 }
+SHORT_DIV = {
+    "V": 5,
+    "IV": 4,
+    "III": 3,
+    "II": 2,
+    "I": 1
+}
 
 with open("private/rgapikey") as key:
     panth = pantheon.Pantheon("euw1", key.read(), True)
@@ -256,6 +263,25 @@ class CmdRgapi:
             em.add_field(name=name, value='\n'.join([player[i] for player in team2]), inline=True)
 
         await msg.edit(embed=em)
+
+    async def cmd_tftear(self, *args, channel, **_):
+        players = ' '.join(args).split(',')
+        summs = await asyncio.gather(*(panth.getSummonerByName(player) for player in players))
+        leagues = await asyncio.gather(*(panth.getLeaguePosition(summ['id']) for summ in summs))
+        leagues = [[league for league in player_leagues if league['queueType'] == "RANKED_TFT"] for player_leagues in leagues]
+
+        txt = "```"
+        for i in range(len(summs)):
+            if not leagues[i]:
+                txt += "{:>16}: None\n"
+            else:
+                txt += "{:>16}: {} {} {}LP\n".format(summs[i]['name'],
+                                                   SHORT_LEAGUE[leagues[i][0]['tier']],
+                                                   SHORT_DIV[leagues[i][0]['rank']],
+                                                   leagues[i][0]['leaguePoints'])
+        txt += "```"
+        await channel.send(txt)
+
 
 async def format_player_info(data: dict):
     try:
