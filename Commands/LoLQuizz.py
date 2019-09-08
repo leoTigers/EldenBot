@@ -3,7 +3,7 @@ import discord
 import random
 import logging
 import asyncio
-from typing import Dict, Any, Optional
+from typing import Dict, Any, Tuple
 from util.exception import InvalidArgs
 
 logger = logging.getLogger("LoLQuizz")
@@ -15,26 +15,33 @@ def get_champion_full():
     return response.json()['data']  # type: Dict[str, Dict[str, Any]]
 
 champion_full = get_champion_full()
-BASE_URL = "http://ddragon.canisback.com/latest/img/spell/"
+BASE_URL_SPELL = "http://ddragon.canisback.com/latest/img/spell/"
+BASE_URL_PASSIVE = "http://ddragon.canisback.com/latest/img/passive/"
 EMBED_TITLE = "Find the spell"
 LETTER_TO_N = {'q': 0, 'a': 0, 'w': 1, 'z': 1, 'e': 2, 'r': 3, 'p': 4}
 
 class RandomSpell:
-    def __init__(self, last=None):
+    def __init__(self, old=None):
+        """
+
+        Args:
+            old (List[Tuple[str, int]]):
+        """
         while True:
             champion = random.choice(list(champion_full.keys()))
             n = random.randint(0, 4)
             self.answer = (champion, n)
-            if self.answer == last: continue
+            if self.answer in old: continue
+            if n == 4:
+                self.name = champion_full[champion]['passive']['name']
+                self.image_endurl = champion_full[champion]['passive']['image']['full']
+            else:
+                self.name = champion_full[champion]['spells'][n]['name']
+                self.image_endurl = champion_full[champion]['spells'][n]['image']['full']
+            self.champion = champion.lower().replace("'", "")
+            self.simplified_name = self.name.lower().replace("'", '')
+            if not self.simplified_name: continue
             break
-        if n == 4:
-            self.name = champion_full[champion]['passive']['name']
-            self.image_endurl = champion_full[champion]['passive']['image']['full']
-        else:
-            self.name = champion_full[champion]['spells'][n]['name']
-            self.image_endurl = champion_full[champion]['spells'][n]['image']['full']
-        self.champion = champion.lower().replace("'", "")
-        self.simplified_name = self.name.lower().replace("'", '')
 
     def __eq__(self, other):
         """
@@ -47,7 +54,9 @@ class RandomSpell:
 
     @property
     def image_url(self):
-        return BASE_URL + self.image_endurl
+        if self.answer[1] == 4:
+            return BASE_URL_PASSIVE + self.image_endurl
+        return BASE_URL_SPELL + self.image_endurl
 
     def to_embed(self, *, with_image=False, footer_text=None):
         em = discord.Embed(title=EMBED_TITLE, description=self.name)
@@ -69,7 +78,6 @@ class RandomSpell:
             n = LETTER_TO_N[str_list[-1]]
         except:
             return False
-        print([self.champion, champion, self.answer[1], n])
         return self.champion == champion and self.answer[1] == n
 
 
@@ -91,12 +99,16 @@ class CmdLoLQuizz:
                 max_question = int(''.join(args))
             except:
                 raise InvalidArgs("Le nombre max de question doit être un nombre")
+            if max_question > 500:
+                raise InvalidArgs("Déso pas déso, le max c'est 500")
 
         points = {}
+        old = []
 
         for current_question in range(max_question):
             second_time = False
-            spell = RandomSpell()
+            spell = RandomSpell(old=old)
+            old.append(spell.answer)
             check = lambda m: m.channel == channel and spell.check_if_correct(m.content)
 
             while True:
