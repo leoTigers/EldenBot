@@ -13,6 +13,7 @@ from .info import CmdInfos
 from .latex import CmdLatex
 from .link import CmdLink
 from .lol_score import CmdLolScore
+from .LoLQuizz import CmdLoLQuizz
 from .moderation_tools import CmdModeration
 from .money import CmdMoney
 from .music import CmdMusic
@@ -26,7 +27,7 @@ from LoupGarou.lg import CmdLg
 class Command(CmdRoll, CmdLatex, CmdRgapi, CmdLink, CmdDeleteAllMessage,
               CmdVerif, CmdLolScore, CmdMusic, CmdModeration, CmdLg,
               CmdMoney, CmdInfos, CmdUseless, CmdHelp,
-              CmdJdr):
+              CmdJdr, CmdLoLQuizz):
     sleep = False
 
     @only_owner
