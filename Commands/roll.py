@@ -61,7 +61,6 @@ def parse_expr(expr : str) -> Tuple[List[Dice], int]:
     for ex in ex_list:
         r = re.findall(r"^([\+-])?(\d+)d(\d+)$", ex)
         b = re.findall(r"^([\+-])?(\d+)$", ex)
-        print(ex, r, b, sep='\n')
         if r:
             r = r[0]
             if r[1] == '0':

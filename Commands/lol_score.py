@@ -52,7 +52,6 @@ async def get_leaderboard_place(message, summ_id, rank):
     return ([i[0] for i in l].index(summ_id) + 1, len(l))
 
 async def get_ranked_score(summoner_id: str) -> dict:
-    print("getting score for : {}".format(summoner_id))
     data = await panth.getLeaguePosition(summoner_id)
     pos = {QUEUE[i["queueType"]]:
             (LEAGUE_SCORE[i['tier']] + DIV_SCORE[i['rank']] + i['leaguePoints'],
@@ -84,7 +83,6 @@ class CmdLolScore:
         summ_id, name = None, None
         if not args:
             verif = load_verif()
-            print(str(member.id), verif, str(member.id) in verif)
             if str(member.id) in verif:
                 summ_id = verif[str(member.id)]
             else:

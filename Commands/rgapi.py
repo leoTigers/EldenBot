@@ -72,7 +72,6 @@ async def getLastYearHistory(accountId):
     index = 0
     tasks = []
     begin = int(time.time()) * 1000 - 31536000000
-    print(begin)
     while True:
         matchs = await panth.getMatchlist(accountId, params={"beginIndex":index, "beginTime":begin})
         tasks += [panth.getMatch(match["gameId"]) for match in matchs['matches']]
@@ -214,7 +213,6 @@ class CmdRgapi:
                 if pos == oldpos :
                     afk += 1
                     if afk >= 2:
-                        print(str(matches[i]["gameId"]))
                         try: count[str(matches[i]["gameId"])] += 1
                         except: count[str(matches[i]["gameId"])] = 2
                 else: afk = 0
@@ -304,5 +302,4 @@ async def format_player_info(data: dict):
         champ_masteries = {'championLevel': 0, 'championPoints': 0}
     a = lambda nb: [nb[::-1][i*3:(i+1)*3][::-1] for i in range((len(nb)+2)//3)][::-1]
     score = "{} Level {}\n{} {} points\n".format(MASTERIES_TO_EMOJI.get(str(champ_masteries['championLevel']), INVISIBLE_EMOJI), champ_masteries['championLevel'], INVISIBLE_EMOJI, ' '.join(a(str(champ_masteries['championPoints']))))
-    print(player, runes, score)
     return (player, runes, score)

@@ -1,7 +1,10 @@
 import json
 import discord
+import logging
 from pantheon import pantheon
 from util.decorator import only_owner
+
+logger = logging.getLogger("Verif")
 
 with open("private/rgapikey") as key:
     panth = pantheon.Pantheon("euw1", key.read(), True)
@@ -36,7 +39,7 @@ class CmdVerif:
         verified = load_verif()
         for member in members:
             if str(member.id) not in verified.keys():
-                print(member.display_name)
+                logger.info("Verifing " + member.display_name)
                 try:
                     summ_data = await panth.getSummonerByName(member.display_name)
                 except:

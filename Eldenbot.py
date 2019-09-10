@@ -4,6 +4,8 @@ import logging
 import json
 import traceback
 
+logging.basicConfig(level=logging.INFO)
+
 from random_message import *
 from Commands.link import send_to_linked
 from util.function import msg
@@ -13,12 +15,12 @@ if __name__ == '__main__':
     from Commands import Command
     command = Command()
 
-logging.basicConfig(level=logging.INFO)
 client = discord.Client(activity=discord.Game("type /help for commands"))
+logger = logging.getLogger("Main")
 
 @client.event
 async def on_ready():
-    print("Connected")
+    logger.info("Connected")
 
 @client.event
 async def on_message(m):
@@ -37,6 +39,7 @@ async def on_message(m):
         except:
             return
         try:
+            logger.info(f"{member} used command {m.content}")
             await function(*args, message=m, member=member, force=force, cmd=cmd,
                            client=client, channel=m.channel, guild=m.guild)
         except BotError:

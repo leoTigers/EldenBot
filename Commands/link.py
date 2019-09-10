@@ -1,15 +1,18 @@
 import json
 import discord
+import logging
 from random_message import *
 from util.decorator import only_owner
+
+logger = logging.getLogger("Link")
 
 def load_link_file():
     try:
         with open("private/link.data", 'r') as fd:
-            return (json.loads(fd.read()))
+            return json.loads(fd.read())
     except:
-        print("IMPOSSBILE DE LOAD LE FICHIER private/link.data !")
-        return ({})
+        logger.error("IMPOSSBILE DE LOAD LE FICHIER private/link.data !")
+        return {}
 
 def save_link_file(data):
     with open("private/link.data", 'w') as fd:

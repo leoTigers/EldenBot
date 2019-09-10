@@ -4,9 +4,11 @@ import aiohttp
 import os
 import re
 import asyncio
+import logging
 
 from util.exception import NotFound, InvalidArgs
 
+logger = logging.getLogger("Music")
 
 # Suppress noise about console usage from errors
 youtube_dl.utils.bug_reports_message = lambda: ''
@@ -64,7 +66,6 @@ class YTDLSource(discord.PCMVolumeTransformer):
 
 class Song:
     def __init__(self, url, ss=None):
-        print(ss)
         info = ytdl.extract_info(url, download=False)
         self.url = url
         self.title = info['title']
@@ -80,6 +81,7 @@ class MusicClient:
         pass
 
     async def create(self, message, client):
+        logger.info("Creating MusicClient")
         if message.author.voice.channel:
             self.voice_client = await message.author.voice.channel.connect()
             self.queue = []
@@ -88,6 +90,7 @@ class MusicClient:
         return self
 
     async def stream(self, song):
+        logger.info(f"Starting streaming {song}")
         if song.ss:
             option = {**ffmpeg_options, **{'options':ffmpeg_options['options'] + ' -ss {}'.format(song.ss)}}
         else:
@@ -184,7 +187,7 @@ async def search_music(song_name):
             assert resp.status == 200
             html = await resp.text()
     result = re.findall(r'href=\"\/watch\?v=(.{11})', html)
-    print(result)
+    logger.info(f"find music {result}")
     if not result:
         return None
     return "https://www.youtube.com/watch?v=" + result[0]

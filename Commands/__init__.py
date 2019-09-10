@@ -4,7 +4,11 @@ import math
 import discord
 import signal
 import subprocess
+import logging
 from util.decorator import only_owner
+
+logger = logging.getLogger("CommandInitializer")
+logger.info("Loading commands")
 
 from .JDR import CmdJdr
 from .deleteallmessage import CmdDeleteAllMessage

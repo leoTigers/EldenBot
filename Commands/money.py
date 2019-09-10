@@ -4,7 +4,7 @@ import discord
 import random
 import json
 
-class MoneyDict():
+class MoneyDict:
     def __init__(self):
         with open("private/coins.save", 'r') as fd:
             self.dic = json.load(fd)
