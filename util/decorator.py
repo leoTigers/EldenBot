@@ -36,12 +36,19 @@ def can_manage_message(func):
     return wrapper
 
 def can_manage_role(func):
-    async def wrapper(self, *args, **kwargs):
+    async def wrapper(self, *args, channel, **kwargs):
         if not kwargs['guild']:
             await channel.send("la commande doit être utilisé sur un serveur.")
             return
         if kwargs['member'].guild_permissions.manage_roles or kwargs['force']:
-            await func(self, *args, **kwargs)
+            await func(self, *args, channel=channel, **kwargs)
         else:
             await kwargs['channel'].send("La permission 'Gérer les roles' est nécéssaire")
     return wrapper
+
+def refresh_google_token(creds, gc):
+    def inner(func):
+        if creds.access_token_expired:
+            gc.login()
+        return func
+    return inner

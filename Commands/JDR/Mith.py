@@ -9,6 +9,7 @@ from ..roll import roll
 from util.exception import InvalidArgs, NotFound
 from util.function import get_member
 from util.constant import POUBELLE_ID
+from util.decorator import refresh_google_token
 from typing import List
 
 credentials = sac.from_json_keyfile_name("private/googlekey.json", ["https://spreadsheets.google.com/feeds"])
@@ -81,6 +82,7 @@ async def create_image(avatar_url, current_hp, max_hp):
 
 
 class CmdJdrMith:
+    @refresh_google_token(credentials, gc)
     async def cmd_takedamage(self, *args : List[str], message, member, channel, guild, client, heal=False, **_):
         """
         Args:
