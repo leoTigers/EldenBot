@@ -1,8 +1,10 @@
 from random_message import forbidden
+import logging
 
 OWNER_ID = 384274248799223818
 OFFICIAL_SERVS = [367683573014069249]
 SERV_FORBIDEN = "Impossible de lancer cette commande sur ce serveur"
+logger = logging.getLogger("Decorator")
 
 
 def not_offical_serv(func):
@@ -47,8 +49,13 @@ def can_manage_role(func):
     return wrapper
 
 def refresh_google_token(creds, gc):
-    def inner(func):
-        if creds.access_token_expired:
-            gc.login()
-        return func
-    return inner
+    def decorat(func):
+        async def wrapper(*args, **kwargs):
+            logger.debug("Checking for Google token ...")
+            logger.debug(f"testing creds.access_token_expired : value = {creds.access_token_expired}")
+            if creds.access_token_expired:
+                logger.info("Refreshing google token")
+                gc.login()
+            return await func(*args, **kwargs)
+        return wrapper
+    return decorat
