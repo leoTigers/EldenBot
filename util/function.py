@@ -3,8 +3,6 @@ import re
 import json
 from util.exception import ALEDException
 
-mention_regex = re.compile(r"(?<=^<@)\d+(?=>$)")
-
 def msg(message, error=False):
     if error : return("```diff\n- [ERREUR]\n{}```".format(message))
     else :     return("```diff\n{}```".format(message))
@@ -26,7 +24,7 @@ def get_member(guild, name):
     member = guild.get_member_named(name)
     if member:
         return member
-    match = re.search(mention_regex, name)
+    match = re.findall(r"<@!?(\d+)>", name)
     if match:
         return guild.get_member(int(match[0]))
     if name.isdigit():
