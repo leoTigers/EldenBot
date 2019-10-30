@@ -1,12 +1,13 @@
 import json
 import discord
 import gspread
+from random import randint
 from oauth2client.service_account import ServiceAccountCredentials as sac
 from PIL import Image, ImageDraw, ImageFilter
 from io import BytesIO, BufferedIOBase
 from ..roll import roll
 
-from util.exception import InvalidArgs, NotFound
+from util.exception import InvalidArgs, NotFound, BotError
 from util.function import get_member
 from util.constant import POUBELLE_ID
 from util.decorator import refresh_google_token
@@ -15,21 +16,22 @@ from typing import List
 credentials = sac.from_json_keyfile_name("private/googlekey.json", ["https://spreadsheets.google.com/feeds"])
 gc = gspread.authorize(credentials)
 
+# FILE CONST
 with open("private/mith_sheets.json") as fd:
     CHAR_SHEET = json.load(fd)
 MJ_ID = 203934874204241921
+COMP_XP = {"Crédit": 4}
 
+# BORDER CONST
 SIZE = 128
 MIN_Y = 16
 MAX_Y = SIZE - 16
 MIN_X = SIZE - SIZE // 4
 MAX_X = SIZE * 6
-
-
 BORDER_WIDTH = 8
-
 START_X = MIN_X + BORDER_WIDTH
 END_X = MAX_X - BORDER_WIDTH
+
 
 async def create_image(avatar_url, current_hp, max_hp):
     """
@@ -72,13 +74,24 @@ async def create_image(avatar_url, current_hp, max_hp):
             else:
                 pix[x, y] = (0, 0, 0, 255)
 
-
-
     result.paste(raw_avatar, (0, 0), raw_avatar)
     r = BytesIO()
     result.save(r, format='PNG')
     r.seek(0)
     return r
+
+def xp_roll(line : List[str]) -> dict:
+    print(line)
+    comp_name = line[4]
+    xp = int(line[8]) if line[8] else 0
+    total = int(line[9]) if line[9] else 0
+    gain_value = COMP_XP.get(comp_name, 6)
+    dice = randint(1, 100)
+    success = dice > total
+    crits = dice > 100 - (5 - total // 20)
+    xp_won = (randint(1, gain_value) if success else 0) + (gain_value if crits else 0)
+    return {"success": success, "crits": crits, "old_xp": xp, "new_xp": xp + xp_won, "xp_won": xp_won,
+            "old_total": total, "new_total": min(total + xp_won, 100), "comp_name": comp_name, "roll": dice}
 
 
 class CmdJdrMith:
@@ -143,8 +156,6 @@ class CmdJdrMith:
         cell_list[0].value = new_hp
         wsh.update_cells(cell_list)
 
-    async def cmd_td(self, *args, **kwargs): await self.cmd_takedamage(*args, **kwargs)
-    async def cmd_hd(self, *args, **kwargs): await self.cmd_takedamage(*args, **kwargs, heal=True)
 
     async def cmd_gmroll(self, *args, message, member, client,**_):
         if not args or not args[0]:
@@ -163,4 +174,41 @@ class CmdJdrMith:
         except discord.HTTPException:
             pass
 
+    async def cmd_xproll(self, *args, member, channel, **_):
+        target = member
+        try:
+            wsh = gc.open_by_key(CHAR_SHEET[str(target.id)]).sheet1
+        except:
+            raise BotError("Impossible d'ouvrir la fiche de personnage du membre")
+        ll = wsh.get_all_values()  # type: List[List[str]]
+        if len(ll[0]) < 13:
+            raise BotError("La fiche de personnage doit au moins avoir une colonne 'M'")
+
+        recap = []
+        to_update = {}
+        for i, line in enumerate(ll):
+            if line[12] == 'TRUE':  # if column M == TRUE
+                last_rec = xp_roll(line)
+                recap.append(last_rec)
+                if last_rec['success']:
+                    to_update[i + 1] = last_rec['new_xp']
+        if not recap:
+            return await channel.send("Vous n'avez aucun jet d'XP à faire ...")
+        await channel.send("```diff\n{}```".format('\n'.join(
+           [( f"{'+' if d['success'] else '-'} {d['comp_name'][:16]:<16} {d['roll']:^3}/{d['old_total']:>3}"
+            + ' | ' + (f"{d['old_total']:^3}->{d['new_total']:^3} (+{d['xp_won']}){' CRITIQUE' if d['crits'] else ''}" if d['success'] else 'Échoué'))
+            for d in recap]
+        )))
+        up = wsh.range(f"I1:I{len(ll)}")
+        up = [gspread.Cell(cell.row, cell.col, to_update[cell.row]) for cell in up if cell.row in to_update]
+        wsh.update_cells(up)
+        up = wsh.range(f"M1:M{len(ll)}")
+        for cell in up:
+            if cell.value == 'FALSE' or cell.value == 'TRUE':
+                cell.value = False
+        wsh.update_cells(up)
+
+
+    async def cmd_td(self, *args, **kwargs): await self.cmd_takedamage(*args, **kwargs)
+    async def cmd_hd(self, *args, **kwargs): await self.cmd_takedamage(*args, **kwargs, heal=True)
     async def cmd_gr(self, *args, **kwargs): await self.cmd_gmroll(*args, **kwargs)
