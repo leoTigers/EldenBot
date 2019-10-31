@@ -33,7 +33,7 @@ START_X = MIN_X + BORDER_WIDTH
 END_X = MAX_X - BORDER_WIDTH
 
 
-async def create_image(avatar_url, current_hp, max_hp):
+async def create_image(avatar_url, current_hp, max_hp, injury=False, knock=False):
     """
 
     Args:
@@ -42,13 +42,15 @@ async def create_image(avatar_url, current_hp, max_hp):
         max_hp (int):
 
     Returns:
-
+        Image
     """
     result = Image.new('RGBA', (SIZE * 6, SIZE), (0, 0, 0, 0))
     raw_data = await avatar_url.read()
     raw_avatar = Image.open(BytesIO(raw_data))
     raw_avatar = raw_avatar.resize((SIZE, SIZE), Image.ANTIALIAS)
 
+    if knock:
+        raw_avatar = raw_avatar.convert('1').convert('RGBA')
     bigsize = (raw_avatar.size[0] * 3, raw_avatar.size[1] * 3)
     mask = Image.new('L', bigsize, 0)
     draw = ImageDraw.Draw(mask)
@@ -72,7 +74,10 @@ async def create_image(avatar_url, current_hp, max_hp):
                 if (x - START_X) / (END_X - START_X) <= health_percent:
                     pix[x, y] = health_color
             else:
-                pix[x, y] = (0, 0, 0, 255)
+                if injury:
+                    pix[x, y] = (0x40, 0x00, 0x20, 255)  #  black-red
+                else:
+                    pix[x, y] = (0, 0, 0, 255)  # black
 
     result.paste(raw_avatar, (0, 0), raw_avatar)
     r = BytesIO()
@@ -129,10 +134,13 @@ class CmdJdrMith:
             damage = -damage
 
         wsh = gc.open_by_key(CHAR_SHEET[str(target.id)]).sheet1
-        cell_list = wsh.range('K3:K4')
+        cell_list = wsh.range('K3:K6')
         new_hp = int(cell_list[0].value) - damage
         if new_hp > int(cell_list[1].value):
             new_hp = int(cell_list[1].value)
+        print(cell_list)
+        knock = cell_list[2].value == 'TRUE'
+        injury = cell_list[3].value == 'TRUE'
 
         em = discord.Embed(colour=target.colour)
         if roll_result.dices:
@@ -147,14 +155,14 @@ class CmdJdrMith:
         em.set_footer(text=message.content)
         msg = await channel.send(embed=em)
 
-        img = await create_image(target.avatar_url_as(format="png", size=1024), new_hp, int(cell_list[1].value))
+        img = await create_image(target.avatar_url_as(format="png", size=1024), new_hp, int(cell_list[1].value), injury, knock)
 
         trash_msg = await client.get_channel(POUBELLE_ID).send(file=discord.File(fp=img, filename="a.png")) #type: discord.Message
         em.set_image(url=trash_msg.attachments[0].url)
         await msg.edit(embed=em)
 
         cell_list[0].value = new_hp
-        wsh.update_cells(cell_list)
+        wsh.update_cell(3, 11, new_hp)
 
 
     async def cmd_gmroll(self, *args, message, member, client,**_):
@@ -174,6 +182,7 @@ class CmdJdrMith:
         except discord.HTTPException:
             pass
 
+    @refresh_google_token(credentials, gc)
     async def cmd_xproll(self, *args, member, channel, **_):
         target = member
         try:
