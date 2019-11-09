@@ -25,7 +25,7 @@ class CmdModeration:
         """/mdelete {message_id} [!][*raison]"""
         if not args:
             raise InvalidArgs("Pas d'argument reçu")
-        msg = await channel.get_message(int(args[0]))
+        msg = await channel.fetch_message(int(args[0]))
         await msg.delete()
         await message.delete()
         if len(args) >= 2:
@@ -40,7 +40,7 @@ class CmdModeration:
         await message.delete()
         if not args:
             raise InvalidArgs("Pas d'argument reçu")
-        msg = await channel.get_message(int(args[0]))
+        msg = await channel.fetch_message(int(args[0]))
         target = client.get_channel(int(args[1]))
         reason = None
         if len(args) >= 3:
@@ -56,7 +56,7 @@ class CmdModeration:
         await message.delete()
         if not args:
             raise InvalidArgs("Pas d'argument reçu")
-        msg = await channel.get_message(int(args[0]))
+        msg = await channel.fetch_message(int(args[0]))
         target = client.get_channel(int(args[1]))
         reason = None
         if len(args) >= 3:

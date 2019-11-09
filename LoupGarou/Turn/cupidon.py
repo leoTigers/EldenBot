@@ -1,7 +1,7 @@
-from LoupGarou.Loading.object import is_alive
+from LoupGarou.decorator import is_alive
 import discord
 
-async def update_msg(msg=None, player=None):
+async def update_msg(msg=None, player=None, target=None):
         em = discord.Embed(title="Joueur en vie",
                            description="{}\n```Cible 1> {}\nCible 2> {}```".format(
                                 '\n'.join(['- ' + i.name for i in game.alive]),
@@ -15,14 +15,14 @@ async def update_msg(msg=None, player=None):
 
 @is_alive("cupidon")
 async def cupidon(game, player):
-    tagets = (None, None)
+    targets = [None, None]
     msg= None
     def check(message):
         return message.author == player.member
 
-    for i in range(len(targets))
+    for i in range(len(targets)):
         while not targets[i] :
-            msg = update_msg(msg=msg, player=player)
+            msg = update_msg(msg=msg, player=player, target=targets)
             inp = await game.client.wait_for('message', check=check)
             target = game.get_player(inp)
             if not target:
@@ -37,3 +37,4 @@ async def cupidon(game, player):
                   title_args=[str(targets[1])], image=targets[1].member.avatar_url)
     await game.announce("amoureux", mp=True, author=targets[1].member,
                   title_args=[str(targets[0])], image=targets[0].member.avatar_url)
+    game.add_history(f"Cupidon ({player}) a choisis comme amoureux {target[0]} et {target[1]}")

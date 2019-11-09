@@ -1,77 +1,89 @@
 import discord
-import random
+import logging
 
+logger = logging.getLogger("LG")
 
 class Player:
-    def __init__(self, role, member, plid):
-        self.life = True
-        self.role = role()
-        self.member = member
-        self.name = member.name
-        self.id = plid
-        self.love = None
-        self.game = None
+    def __init__(self, role, images, member, plid, game):
+        self.life = True # Bool
+        self.role = role(images) # Role
+        self.member = member # discord.Member
+        self.name = member.name # str
+        self.id = plid # int
+        self.love = None # unused ?
+        self.game = game # Game
     def __str__(self):
         return self.name
     def __int__(self):
         return self.id
-    async def kill(self, reason="none"):
+    async def kill(self, reason="none") -> discord.Message:
         self.life = False
         self.game.alive.remove(self)
-        return await self.game.announce('death_' + reason, author=self.member)
-    async def send(self, *args, **kwargs):
+        if self.game.death_channel:
+            try : await self.member.move_to(self.game.death_channel)
+            except: logger.warning("Can't move member to death_channel")
+        ann = await self.game.announce('death_' + reason, author=self.member,
+                                       image=self.role.image if self.game.option['show_role_at_death'] else None,
+                                       desc_args={'player': self.name})
+        if self.game.lovers and self in self.game.lovers:
+            self.game.lovers.remove(self)
+            await self.game.lovers[0].kill(reason="love")
+        return ann
+    async def send(self, *args, **kwargs) -> discord.Message:
         return await self.member.send(*args, **kwargs)
-
-class Announce:
-    def __init__(self, game, line):
-        self.game = game
-        self.announce = line[0]
-        self.color = int(line[1], base=16)
-        self.title = line[3] if line[3] else None
-        self.texts = [ann for ann in line[4:] if ann]
-    async def send(self, author=None, mp=False, image=None,
-                   title_args=[], desc_args=[]):
-        channel = author if mp else self.game.channel
-        em = discord.Embed(title=self.title.format(*title_args), colour=self.color,
-                           description=random.choice(self.texts).format(*desc_args))
-        if author:
-            em.set_author(name=author.name, icon_url=author.avatar_url)
-        if image:
-            em.set_thumbnail(url=image)
-        channel = author if mp else self.game.channel
-        return await channel.send(embed=em)
 
 from LoupGarou.Loading.announce import load_announce
 from LoupGarou.Loading.constant import OPTION
 
 class Game:
     def __init__(self, mj, channel, client):
-        self.mj = mj
-        self.channel = channel
-        self.client = client
-        self.option = OPTION
-        self.players = None
-        self.alive = None
-        self.lovers = None
+        self.mj = mj # discord.Member
+        self.channel = channel # discord.Channel
+        self.client = client # discord.Client
+        self.option = OPTION # {str: value, ...}
+        self.players = None # [Player, ...]
+        self.alive = None # [Player, ...]
+        self.lovers = None # [Player, Player] or None
+        self.target = None # Player or None
         self.announces = load_announce(self)
+        self.history = [] # [str, ...]
+        self.death_channel = None # None or Discord.VoiceChannel
+        self.logger = logger
+
     def _set_players(self, players):
         self.players = players
         self.alive = players
-    async def announce(self, ann, **kwarg):
-        await self.announces[ann].send(**kwarg)
-    def get_player(name):
-        try:
-            index = [i.member.name for i in self.alive].index(name)
-            return self.alive[index]
-        except ValueError: #if player is not in list
-            return None
 
+    async def announce(self, ann : str, **kwarg) -> discord.Message:
+        return await self.announces[ann].send(**kwarg)
 
-def is_alive(function, role):
-    async def wrapper(game):
-        for player in game.alive:
-            if player.role == role:
-                await game.announce("urturn_" + role, author=player.member,
-                                    mp=True, image=player.role.image)
-                await function(game, player)
-    return wrapper
+    def get_player(self, name : str) -> Player:
+        if isinstance(name, discord.Message):
+            name = name.content
+        for player in self.alive:
+            if name == player.name:
+                return player
+        return None
+
+    def get_player_by_member(self, member) -> Player:
+        for player in self.alive:
+            if player.member.id == member.id:
+                return player
+        return None
+
+    async def wait_for_message(self, member_list) -> discord.Message:
+        if not isinstance(member_list, list):
+            member_list = [member_list]
+        def check(mmessage):
+            return (mmessage.author.id in [i.id for i in member_list]
+                    or (mmessage.author == self.mj and mmessage.content.startswith('/lgmj ')))
+        while True:
+            message = await self.client.wait_for("message", check=check)
+            if message.content.startswith('/lgmj ') and message.author != self.mj:
+                continue
+            return message
+
+    def add_history(self, txt, show=True):
+        logger.info(txt)
+        if show:
+            self.history.append(txt)

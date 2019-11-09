@@ -1,5 +1,8 @@
 from LoupGarou.Loading.object import Game, Player
 from LoupGarou.Loading.constant import *
+from LoupGarou.Loading.announce import load_images
+from LoupGarou.gameloop import game_loop
+from LoupGarou.option_manager import option_management
 import discord
 import random
 
@@ -14,24 +17,28 @@ async def lg_start(message, argv, mj, client):
     #create players list
     players_list = await create_plist(message, mj, client)
     #option
-    await game.channel.send("```option:\ndiff\n{}```".format(
-                                "\n".join("{} {} : {}".format('+' if i else '-', i, j)
-                                for i, j in game.option.items())))
+    await option_management(game, players_list)
     #role distribution
     players = await distrib_role(players_list, game)
     game._set_players(players)
     #create game object
+    await game_loop(game)
 
 
 async def distrib_role(players_list, game):
+    em = discord.Embed(title="distribution des role...", description="0/{}".format(len(players_list)))
+    notif = await game.channel.send(embed=em)
     players = []
-    role_list  = ROLE_LIST[len(players_list):]
+    role_list  = ROLE_LIST[:len(players_list)]
+    images = load_images(game)
     plid = 0
     while players_list:
         plid += 1
+        em = discord.Embed(title="distribution des role...", description="{}/{}".format(plid, len(players_list)))
+        await notif.edit(embed=em)
         player_index = random.randint(0, len(players_list) - 1)
         role_index = random.randint(0, len(players_list) - 1)
-        new_player = Player(role_list[role_index], players_list[player_index], plid)
+        new_player = Player(role_list[role_index], images, players_list[player_index], plid, game)
         players.append(new_player)
         del role_list[role_index], players_list[player_index]
         await game.announce("announce_" + str(new_player.role),
@@ -57,9 +64,8 @@ async def create_plist(message, mj, client):
                 async for user in reaction.users():
                     if user != client.user:
                         players_list.append(user)
-        for player in players_list:
-            em = discord.Embed(title=START_PL_TITLE,
-                               description="\n".join(["- " + i.name for i in players_list]))
+        em = discord.Embed(title=START_PL_TITLE,
+                           description="\n".join(["- " + i.name for i in players_list]))
         await msg.edit(embed=em)
         reaction, user = await client.wait_for('reaction_add', check=check)
         if str(reaction.emoji) == NEXT_EMOJI and user == mj:

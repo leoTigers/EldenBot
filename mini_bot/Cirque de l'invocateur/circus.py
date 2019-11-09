@@ -419,7 +419,7 @@ async def delete(message, av):
 async def update_msg():
     save_data()
     channel = client.get_channel(REG_CHANNEL_ID)
-    msg = await channel.get_message(MSG_ID)
+    msg = await channel.fetch_message(MSG_ID)
     txt = "__Liste des inscrits__:\n\n"
     for event, dic in data.items():
         if not dic["hidden"]:
@@ -445,7 +445,7 @@ async def start_game(message, av):
     await start_msg.add_reaction("✔")
     while timer - time.time() >= 0 :
         try:
-            start_msg = await channel.get_message(start_msg.id)
+            start_msg = await channel.fetch_message(start_msg.id)
             ready = await start_msg.reactions[0].users().flatten()
             ready = [i.id for i in ready]
             await start_msg.edit(content=\
@@ -459,7 +459,7 @@ async def start_game(message, av):
 
 async def del_all_reactions(emoji):
     channel = client.get_channel(REG_CHANNEL_ID)
-    msg = await channel.get_message(MSG_ID)
+    msg = await channel.fetch_message(MSG_ID)
     for reaction in reactions:
         if reaction.emoji == emoji:
             async for user in reaction.users():

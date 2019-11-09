@@ -1,3 +1,4 @@
+from LoupGarou.decorator import is_alive
 import discord
 
 @is_alive("voyante")
@@ -17,4 +18,5 @@ async def seer(game, player):
         if not target :
             await player.send("Joueur introuvable")
     await game.announce("voyante_" + target.role.name, mp=True,
-                        author=player, image=target.role.image)
+                        author=player.member, image=target.role.image)
+    game.add_history(f"La voyante ({player}) a révélé l'identité de {target} ({target.role})")

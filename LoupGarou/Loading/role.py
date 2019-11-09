@@ -1,9 +1,8 @@
-# from LoupGarou.Loading.announce import load_images
-#
-# images = load_images()
+import random
+from LoupGarou.Loading.announce import load_images
 
 class Role:
-    def __init__(self):
+    def __init__(self, images):
         self.name = self.__str__()
         self.image = random.choice(images[str(self)])
     def __eq__(self, other):
@@ -22,8 +21,8 @@ class Seer(Role):
         return "voyante"
 
 class Witch(Role):
-    def __init__(self):
-        super().__init__()
+    def __init__(self, images):
+        super().__init__(images)
         self.heal = 1
         self.poison = 1
     def __str__(self):
