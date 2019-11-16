@@ -138,6 +138,8 @@ class CmdJdrMith:
         new_hp = int(cell_list[0].value) - damage
         if new_hp > int(cell_list[1].value):
             new_hp = int(cell_list[1].value)
+        if new_hp < 0:
+            new_hp = 0
         print(cell_list)
         knock = cell_list[2].value == 'TRUE'
         injury = cell_list[3].value == 'TRUE'
